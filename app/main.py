@@ -1,266 +1,13 @@
-# # app/main.py
-# """
-# FastAPI Application Entry Point
+import asyncio
+import uuid
+import json
+import logging
+from typing import Optional
 
-# This is the main application file that:
-# - Creates the FastAPI app instance
-# - Configures CORS middleware
-# - Configures Audit middleware (automatic request/response logging)
-# - Registers all API routers
-# - Sets up the authorization middleware
-
-# All endpoint logic has been organized into routers:
-# - routers/health.py - Health checks
-# - routers/auth.py - Authentication & registration
-# - routers/admin.py - Admin user management & settings
-# - routers/items.py - Item CRUD operations
-# - routers/audit.py - Audit log viewing & export
-# - routers/examples.py - Authorization pattern examples
-
-# AUDIT SYSTEM:
-# - Every API request is automatically logged via AuditMiddleware
-# - Custom audit logging available via `from app.services.audit import audit`
-# - View logs at /api/admin/audit, export via /api/admin/audit/export
-# - See app/models/audit.py for full documentation
-# """
-
-# import io
-# import logging
-# import os
-
-# from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, UploadFile
-# from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.responses import Response, StreamingResponse
-
-# from .authz import AuthzEngine
-# from .core.storage import GCSStorage, LocalStorage, StorageBackend
-# from .middleware import AuditMiddleware
-# from .routers import (
-#     admin_router,
-#     audit_router,
-#     auth_router,
-#     examples_router,
-#     health_router,
-#     items_router,
-# )
-# from .security import get_current_user, verify_access
-
-# log = logging.getLogger(__name__)
-
-# # =============================================================================
-# # BASE PATH CONFIGURATION
-# # =============================================================================
-
-# # Get BASE_PATH from environment (e.g., "/app1" or empty string)
-# # This allows the API to be mounted at a subpath
-# BASE_PATH = os.getenv("BASE_PATH", "")
-# if BASE_PATH and not BASE_PATH.startswith("/"):
-#     BASE_PATH = f"/{BASE_PATH}"
-# if BASE_PATH == "/":
-#     BASE_PATH = ""
-
-# log.info(f"API Base Path: '{BASE_PATH}' (empty means root)")
-
-# # =============================================================================
-# # APPLICATION SETUP
-# # =============================================================================
-
-# app = FastAPI(
-#     title="AutoPilot API",
-#     description="AI Command Center — Full-stack template with FastAPI, Next.js, and PostgreSQL",
-#     version="2.0.0",
-#     docs_url=f"{BASE_PATH}/api/docs",
-#     redoc_url=f"{BASE_PATH}/api/redoc",
-#     openapi_url=f"{BASE_PATH}/api/openapi.json",
-# )
-
-# # =============================================================================
-# # MIDDLEWARE CONFIGURATION
-# # =============================================================================
-
-# # CORS Middleware
-# frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3001")
-# cors_origins = [
-#     frontend_url,
-#     "http://localhost:3000",
-#     "http://localhost:3001",
-#     "http://127.0.0.1:3000",
-#     "http://127.0.0.1:3001",
-# ]
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=cors_origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# # Audit Middleware - Automatic request/response logging
-# # This middleware logs ALL HTTP requests to the database for compliance & debugging.
-# # Disable by setting AUDIT_MIDDLEWARE_ENABLED=false in environment.
-# # See app/middleware/audit.py for configuration options.
-# app.add_middleware(AuditMiddleware)
-
-# # =============================================================================
-# # API ROUTER WITH AUTHORIZATION
-# # =============================================================================
-
-# # Create main API router with global authorization middleware
-# # The prefix includes BASE_PATH so routes are at {BASE_PATH}/api/...
-# api_router = APIRouter(
-#     prefix=f"{BASE_PATH}/api",
-#     dependencies=[Depends(verify_access)],
-# )
-
-# # =============================================================================
-# # STORAGE DEPENDENCY
-# # =============================================================================
-
-
-# def get_storage_dependency() -> StorageBackend:
-#     """Get the appropriate storage backend based on environment."""
-#     backend = os.getenv("STORAGE_BACKEND", "local")
-#     if backend == "gcs":
-#         bucket = os.getenv("GCS_BUCKET")
-#         prefix = os.getenv("GCS_PREFIX", "")
-#         if not bucket:
-#             raise ValueError("GCS_BUCKET environment variable is required")
-#         return GCSStorage(bucket, prefix)
-#     else:
-#         path = os.getenv("LOCAL_STORAGE_PATH", "./document_storage")
-#         return LocalStorage(path)
-
-
-# # =============================================================================
-# # INCLUDE ROUTERS
-# # =============================================================================
-
-# # Health checks (public)
-# api_router.include_router(health_router)
-
-# # Authentication & registration
-# api_router.include_router(auth_router)
-
-# # Admin user management & settings
-# api_router.include_router(admin_router)
-
-# # Audit logs (admin only)
-# api_router.include_router(audit_router)
-
-# # Item CRUD operations
-# api_router.include_router(items_router)
-
-# # Authorization pattern examples
-# api_router.include_router(examples_router)
-
-
-# # =============================================================================
-# # FILE STORAGE ENDPOINTS (kept inline for path matching order)
-# # =============================================================================
-
-
-# @api_router.get("/files/", tags=["Files"])
-# async def list_files(
-#     prefix: str = "",
-#     storage: StorageBackend = Depends(get_storage_dependency),
-#     user: dict = Depends(get_current_user),
-# ):
-#     """List all files in storage, optionally filtered by prefix."""
-#     files = await storage.list_files(prefix)
-#     return {"files": files, "count": len(files)}
-
-
-# @api_router.post("/files/{file_path:path}", tags=["Files"])
-# async def upload_file(
-#     file_path: str,
-#     file: UploadFile = File(...),
-#     storage: StorageBackend = Depends(get_storage_dependency),
-#     user: dict = Depends(get_current_user),
-# ):
-#     """Upload a file to storage."""
-#     content = await file.read()
-#     url = await storage.save(file_path, content, file.content_type)
-#     return {
-#         "path": file_path,
-#         "url": url,
-#         "content_type": file.content_type,
-#         "size": len(content),
-#     }
-
-
-# @api_router.get("/files/{file_path:path}", tags=["Files"])
-# async def download_file(
-#     file_path: str,
-#     storage: StorageBackend = Depends(get_storage_dependency),
-#     user: dict = Depends(get_current_user),
-# ):
-#     """Download a file from storage."""
-#     try:
-#         content, content_type = await storage.load(file_path)
-#         return StreamingResponse(
-#             io.BytesIO(content),
-#             media_type=content_type or "application/octet-stream",
-#             headers={"Content-Disposition": f'attachment; filename="{file_path}"'},
-#         )
-#     except FileNotFoundError:
-#         raise HTTPException(status_code=404, detail="File not found")
-
-
-# @api_router.delete("/files/{file_path:path}", tags=["Files"])
-# async def delete_file(
-#     file_path: str,
-#     storage: StorageBackend = Depends(get_storage_dependency),
-#     user: dict = Depends(get_current_user),
-# ):
-#     """Delete a file from storage."""
-#     await storage.delete(file_path)
-#     return {"status": "deleted", "path": file_path}
-
-
-# # =============================================================================
-# # MOUNT ROUTERS TO APP
-# # =============================================================================
-
-# app.include_router(api_router)
-
-
-# # =============================================================================
-# # ROOT ENDPOINT
-# # =============================================================================
-
-
-# @app.get("/")
-# async def root():
-#     """Root endpoint - API information."""
-#     return {
-#         "name": "AutoPilot API",
-#         "version": "2.0.0",
-#         "docs": f"{BASE_PATH}/api/docs",
-#         "health": f"{BASE_PATH}/api/health",
-#         "base_path": BASE_PATH or "/",
-#     }
-
-
-# # Also mount root at BASE_PATH if configured
-# if BASE_PATH:
-
-#     @app.get(BASE_PATH)
-#     async def base_path_root():
-#         """Base path root endpoint - API information."""
-#         return {
-#             "name": "AutoPilot API",
-#             "version": "2.0.0",
-#             "docs": f"{BASE_PATH}/api/docs",
-#             "health": f"{BASE_PATH}/api/health",
-#             "base_path": BASE_PATH,
-#         }
-
-
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-# Load .env file before any other app imports (so DATABASE_URL etc. are available)
+# Load .env file before any other app imports
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -271,12 +18,16 @@ from app.routers.sales_agent import router as sales_agent_router
 from app.routers.client import router as client_router
 from app.routers.chat import router as chat_router
 
+# Import your orchestrator (using the correct path we fixed earlier)
+from app.orchestrator.manager import Orchestrator
+
+# Import your newly perfected Groq transcription service
+from app.services.groq_services import generate_transcript
+
 # Import all models so SQLAlchemy can resolve relationships
 import app.models  # noqa: F401
 
-# NOTE: Table creation is handled by Alembic migrations (alembic upgrade head)
-# which runs automatically on startup via start_gunicorn.sh.
-# Do NOT call Base.metadata.create_all() here — it would conflict with Alembic.
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Sales Agent Communication API",
@@ -301,6 +52,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize Orchestrator and WebSocket state
+orchestrator = Orchestrator()
+ws_clients: dict[str, WebSocket] = {}
+
 # Include Routers
 app.include_router(reps_router, prefix="/api")
 app.include_router(intake_router, prefix="/api")
@@ -309,16 +64,65 @@ app.include_router(client_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 
 
+@app.on_event("startup")
+async def startup():
+    # Start the background worker to process leads in real-time
+    asyncio.create_task(orchestrator.worker(ws_clients))
+    # Changed from log.info to print so it ALWAYS shows up in Docker logs
+    print("🚀 Background orchestrator started.") 
+
+
+@app.post("/api/process-call")
+async def process_call(
+    audio_file: UploadFile = File(...),
+    context: Optional[str] = Form(None),
+    lead_id: Optional[str] = Form(None), # <--- WE ADDED THIS
+):
+    # Use the lead_id from Postman, or generate a new one if it's empty
+    actual_lead_id = lead_id if lead_id else str(uuid.uuid4())
+ 
+    print(f"🎙️ Transcribing audio for lead: {actual_lead_id}...")
+    transcript = await generate_transcript(audio_file)
+ 
+    prev_context = json.loads(context) if context else {}
+ 
+    print(f"🧠 Transcription finished! Pushing to Orchestrator...")
+    
+    # We added `ws_clients` as the 4th argument here!
+    await orchestrator.serialize_and_enqueue(actual_lead_id, transcript, prev_context, ws_clients)
+ 
+    return {"lead_id": actual_lead_id, "status": "queued"}
+
+# ── WEBSOCKET ROUTE ───────────────────────────────────────────────
+@app.websocket("/ws/{lead_id}")
+async def websocket_endpoint(websocket: WebSocket, lead_id: str):
+    """
+    Listen for real-time updates for a specific lead. Test this via Hoppscotch.
+    """
+    await websocket.accept()
+    ws_clients[lead_id] = websocket
+    log.info(f"🟢 WebSocket connected for lead: {lead_id}")
+    
+    try:
+        while True:
+            # Keep the connection alive
+            msg = await websocket.receive_text()  
+            if msg.lower() == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        ws_clients.pop(lead_id, None)
+        log.info(f"🔴 WebSocket disconnected for lead: {lead_id}")
+ 
+
+# ── HEALTH CHECKS ─────────────────────────────────────────────────
 @app.get("/", tags=["Root"])
 def read_root():
     return {"message": "Server is running", "docs": "/api/docs"}
-
 
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """Liveness probe used by Docker healthcheck and frontend."""
     return {"status": "ok"}
-
 
 @app.get("/api/ready", tags=["Health"])
 def ready_check():

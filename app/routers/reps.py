@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional
@@ -49,53 +49,41 @@ def fetch_assigned_leads(rep_id: int, db: Session = Depends(get_db)):
 @router.post("/transcript")
 async def process_call_transcript(
     lead_id: UUID = Form(...),
-    audio_file: UploadFile = File(...),
+    audio_file: Optional[UploadFile] = File(None),
+    transcript_text: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
+    """
+    Save a transcript for a lead and mark it as closed.
+    Accepts EITHER an audio file to transcribe via Groq OR a manual transcript text.
+    """
+    if not audio_file and not transcript_text:
+        raise HTTPException(
+            status_code=400, 
+            detail="You must provide either an 'audio_file' or 'transcript_text'."
+        )
+
     lead = db.query(Lead).filter(Lead.lead_id == lead_id).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
 
-    # Call Groq Service 
-    transcript_text = await generate_transcript(audio_file)
+    # If audio is provided, generate transcript. Otherwise use the manual text.
+    if audio_file:
+        final_transcript = await generate_transcript(audio_file)
+    else:
+        final_transcript = transcript_text
 
-    lead.transcript = transcript_text
+    lead.transcript = final_transcript
     lead.status = "closed" 
     db.commit()
     db.refresh(lead)
 
     return {
-        "message": "Transcript generated successfully",
+        "message": "Transcript saved successfully",
         "lead_data": {
             "lead_id": lead.lead_id,
             "contact": lead.contact,
             "policy_type": lead.policy_type
         },
-        "transcript": transcript_text
-    }
-
-
-@router.post("/transcript/manual")
-def save_manual_transcript(
-    lead_id: UUID = Body(...),
-    transcript_text: str = Body(...),
-    db: Session = Depends(get_db)
-):
-    """
-    Save a manually typed transcript for a lead and mark it as closed.
-    Body: { "lead_id": "<uuid>", "transcript_text": "..." }
-    """
-    lead = db.query(Lead).filter(Lead.lead_id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
-
-    lead.transcript = transcript_text
-    lead.status = "closed"
-    db.commit()
-    db.refresh(lead)
-
-    return {
-        "message": "Transcript saved successfully",
-        "lead_id": str(lead.lead_id),
-        "status": lead.status,
+        "transcript": final_transcript
     }
