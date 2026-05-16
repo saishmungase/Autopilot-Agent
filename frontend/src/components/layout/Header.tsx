@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { Icons } from '@/components/ui/icons'
 import { useAI } from '@/context/AIContext'
+import { useSidebar } from '@/components/layout/Sidebar'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import {
   DropdownMenu,
@@ -207,22 +208,19 @@ interface HeaderProps {
 export function Header({ onOpenMobileMenu }: HeaderProps) {
   const pathname = usePathname()
   const breadcrumbs = getBreadcrumbs(pathname)
+  const { isCollapsed } = useSidebar()
 
   return (
     <header
       role='banner'
       className={cn(
-        // Floating pill positioning
-        'fixed right-4 top-4 z-sticky',
-        // Adjust left position based on sidebar (hidden on mobile)
-        'left-4 md:left-[calc(16rem+1rem)]',
-        // Glass pill styling
-        'rounded-2xl bg-white/70 backdrop-blur-xl',
-        'border border-white/60 ring-1 ring-black/[0.03]',
-        'shadow-float',
-        // Layout
+        'fixed right-0 top-0 z-[100]',
+        'left-0',
+        isCollapsed ? 'md:left-14' : 'md:left-56',
+        'bg-white border-b border-[#E2E6F8]',
         'flex items-center justify-between',
-        'h-14 px-4 lg:px-6'
+        'h-14 px-4 lg:px-6',
+        'transition-all duration-300 ease-out'
       )}
     >
       {/* Left: Mobile menu + Breadcrumb */}

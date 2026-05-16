@@ -7,7 +7,11 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    raise ValueError(
+        "DATABASE_URL environment variable is not set. "
+        "Add it to your .env file, e.g.:\n"
+        "  DATABASE_URL=postgresql://user:password@localhost:5432/mydb"
+    )
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

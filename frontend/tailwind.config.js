@@ -66,17 +66,18 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Brand Palette for manual usage
+        // Brand Palette — Supervity-style
         brand: {
-          black: "#04060A",
-          navy: "#141A42",
-          cornflower: "#8AA2DF",
-          muted: "#848EAA",
-          purple: "#535EA4",
-          light: "#E7E7E7",
-          // Additional shades for UI
-          "navy-light": "#1E2654",
-          "cornflower-light": "#A8BCEB",
+          black: "#0A0C1A",
+          navy: "#3D4B8F",          // Supervity indigo primary
+          cornflower: "#8B9FE8",    // Supervity periwinkle accent
+          muted: "#8892A4",         // Muted text
+          purple: "#5B6BB5",        // Mid-tone indigo
+          light: "#F0F2FF",         // Sidebar/chip background
+          sidebar: "#F0F2FF",       // Supervity sidebar bg
+          // Additional shades
+          "navy-light": "#4D5DA0",
+          "cornflower-light": "#A8B8F0",
         }
       },
       // Background gradients

@@ -1,9 +1,12 @@
 # Dockerfile
 
-# Stage 1: Build with dependencies
+# Stage 1: Build Python dependencies
+# ffmpeg is NOT needed here — only build-essential for compiling C extensions
 FROM python:3.11-slim AS builder
 WORKDIR /opt/venv
-RUN apt-get update && apt-get install -y build-essential && apt-get clean
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY packages/requirements.txt ./requirements.txt
 RUN python -m venv .
 RUN . bin/activate && pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
@@ -15,11 +18,15 @@ ENV PYTHONUNBUFFERED=1
 ENV APP_ENV=production
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install runtime deps: curl (healthcheck) + ffmpeg (pydub audio processing)
+# Split into two RUN commands so ffmpeg layer is cached independently
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create directories required by the application.
-# `scripts` and `alembic` are for development/migration tasks, but creating them
-# here prevents potential permission issues in different environments.
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create directories required by the application
 RUN mkdir -p app gunicorn documents scripts alembic generated_documents document_storage
 
 COPY --from=builder /opt/venv /opt/venv
@@ -32,7 +39,6 @@ COPY scripts ./scripts/
 COPY start_gunicorn.sh ./
 
 RUN chmod -R 755 /app/*/
-# Make scripts executable
 RUN chmod +x start_gunicorn.sh utils/wait_for_db.py 2>/dev/null || true
 
 ENV PATH="/opt/venv/bin:$PATH"
@@ -43,5 +49,4 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
 
 EXPOSE 8000
 
-# The unified entrypoint handles both development and production
 ENTRYPOINT ["sh", "start_gunicorn.sh"]

@@ -4,133 +4,131 @@
 
 @layer base {
   :root {
-    /* 
-      LUMINOUS COMMAND CENTER - LIGHT MODE
-      "Sophisticated Light" aesthetic with Cornflower-tinted whites
+    /*
+      SUPERVITY-STYLE DESIGN SYSTEM
+      Pure white content area, soft periwinkle sidebar, indigo primary
     */
-    
-    /* Background: #F5F7FF (Cornflower-tinted white) - NOT flat gray */
-    --background: 225 60% 98.5%;
-    
-    /* Foreground: #141A42 (Deep Navy) - Premium ink color */
-    --foreground: 232 53% 17%;
 
-    /* Card: Pure white with glaze overlay effect */
+    /* Background: Pure white — exactly like Supervity */
+    --background: 0 0% 100%;
+
+    /* Foreground: Near-black for body text */
+    --foreground: 224 40% 12%;
+
+    /* Card: White with very subtle border */
     --card: 0 0% 100%;
-    --card-foreground: 232 53% 17%;
+    --card-foreground: 224 40% 12%;
 
-    /* Popover: Same as card */
+    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 232 53% 17%;
+    --popover-foreground: 224 40% 12%;
 
-    /* Primary: #141A42 (Deep Navy) - Main brand anchor */
-    --primary: 232 53% 17%;
+    /* Primary: Supervity indigo-blue #3D4B8F */
+    --primary: 231 40% 40%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Soft blue-grey for secondary actions */
-    --secondary: 225 25% 95%;
-    --secondary-foreground: 232 53% 17%;
+    /* Secondary: Very light periwinkle for sidebar/chips */
+    --secondary: 230 60% 97%;
+    --secondary-foreground: 231 40% 30%;
 
-    /* Muted: Refined slate-blue for labels */
-    --muted: 224 20% 96%;
-    --muted-foreground: 224 20% 50%;
+    /* Muted: Light gray-blue for labels */
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 15% 50%;
 
-    /* Accent: #8AA2DF (Cornflower Blue) - Highlights & active states */
-    --accent: 223 54% 71%;
-    --accent-foreground: 232 53% 17%;
+    /* Accent: Supervity periwinkle #8B9FE8 */
+    --accent: 230 65% 73%;
+    --accent-foreground: 231 40% 20%;
 
     /* Destructive */
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders: Soft #E8EBF2 - Not harsh gray */
-    --border: 220 20% 92%;
-    --input: 220 20% 90%;
-    --ring: 223 54% 71%;
+    /* Borders: Very light, barely visible */
+    --border: 220 15% 91%;
+    --input: 220 15% 93%;
+    --ring: 231 40% 40%;
 
-    /* Chart Palette */
-    --chart-1: 232 53% 17%; /* Navy */
-    --chart-2: 223 54% 71%; /* Cornflower */
-    --chart-3: 232 33% 48%; /* Purple */
-    --chart-4: 222 75% 66%; /* Vibrant Blue */
-    --chart-5: 224 20% 59%; /* Muted Blue */
+    /* Charts */
+    --chart-1: 231 40% 40%;
+    --chart-2: 230 65% 73%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84% 60%;
 
-    /* Radius: Soft, modern feel */
-    --radius: 0.75rem;
-    
-    /* Layout: Sidebar width for positioning */
-    --sidebar-width: 16rem;
-    --sidebar-collapsed-width: 4rem;
+    /* Radius: Supervity uses ~8px */
+    --radius: 0.5rem;
+
+    --sidebar-width: 3.5rem;
+    --sidebar-expanded-width: 14rem;
   }
-
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-geologica), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-geologica), -apple-system, BlinkMacSystemFont,
+      'Segoe UI', sans-serif;
   }
-  
-  /* Noise texture overlay for premium paper feel */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.02;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  }
-  
-  /* Primary Font (Funnel Display) for Headings */
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-funnel), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-funnel), -apple-system, BlinkMacSystemFont,
+      'Segoe UI', sans-serif;
     font-weight: 600;
+    color: hsl(224 40% 12%);
   }
 }
 
 @layer utilities {
-  /* Glass surface effect */
-  .glass {
-    @apply bg-white/70 backdrop-blur-xl;
-    box-shadow: 
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
-      0 0 0 1px rgba(0, 0, 0, 0.03);
+  /* Supervity sidebar: very light periwinkle/lavender */
+  .sv-sidebar {
+    background: hsl(230 60% 97%);
+    border-right: 1px solid hsl(220 15% 91%);
   }
-  
-  .glass-hover {
-    box-shadow: 
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-      0 0 0 1px rgba(138, 162, 223, 0.3);
+
+  /* Supervity card: white, thin border, minimal shadow */
+  .sv-card {
+    background: #ffffff;
+    border: 1px solid hsl(220 15% 91%);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
-  
-  /* Card glaze effect */
-  .glaze {
-    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFF 100%);
+
+  /* Supervity active nav item: indigo bg */
+  .sv-nav-active {
+    background: hsl(231 40% 40%);
+    color: white;
+    border-radius: 0.5rem;
   }
-  
-  /* Text gradient utility */
+
+  /* Supervity button primary */
+  .sv-btn-primary {
+    background: hsl(231 40% 40%);
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+
+  /* Text gradient */
   .text-gradient {
     @apply bg-gradient-to-r from-brand-navy via-brand-purple to-brand-cornflower bg-clip-text text-transparent;
   }
-  
-  /* Shimmer animation for skeletons */
+
+  /* Shimmer */
   .shimmer {
     background: linear-gradient(
       90deg,
       hsl(var(--muted)) 0%,
-      hsl(225 25% 97%) 50%,
+      hsl(220 20% 98%) 50%,
       hsl(var(--muted)) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 2s infinite linear;
   }
-  
-  /* Hide scrollbar but keep functionality */
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -138,18 +136,24 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
-  /* Focus ring styles */
+
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cornflower/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2;
+  }
+
+  /* Glass — kept for compatibility */
+  .glass {
+    @apply bg-white/80 backdrop-blur-sm;
+    border: 1px solid hsl(220 15% 91%);
+  }
+
+  .glaze {
+    background: #ffffff;
   }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

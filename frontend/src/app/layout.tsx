@@ -28,6 +28,9 @@ const geologica = Geologica({
 // Routes that should NOT show the main app shell (sidebar, header)
 const AUTH_ROUTES = ['/auth/signin', '/auth/register', '/auth/error']
 
+// Standalone routes — no sidebar, no header, full page
+const STANDALONE_ROUTES = ['/', '/sales']
+
 // Inner layout that can access sidebar context and pathname
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -36,6 +39,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   // Check if current route is an auth route (should be full-screen)
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname?.startsWith(route))
+  const isStandalone = STANDALONE_ROUTES.includes(pathname || '')
+
+  // Standalone routes — completely bare, no shell
+  if (isStandalone) {
+    return <>{children}</>
+  }
 
   // Auth routes get a clean, full-screen layout
   if (isAuthRoute) {
@@ -67,10 +76,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {/* Main content area */}
       <div
         className={cn(
-          'min-h-screen',
-          // Offset for fixed sidebar - responds to collapse state
-          isCollapsed ? 'md:pl-16' : 'md:pl-64',
-          // Transition for sidebar collapse
+          'min-h-screen bg-white',
+          // Offset for fixed sidebar
+          isCollapsed ? 'md:pl-14' : 'md:pl-56',
           'transition-all duration-300 ease-out'
         )}
       >
@@ -84,12 +92,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           aria-label='Main content'
           className={cn(
             'flex flex-col',
-            // Account for floating header (h-14 + top-4 + gap)
-            'pt-24',
+            // Account for fixed header height
+            'pt-[3.5rem]',
             // Padding
-            'px-4 pb-8 lg:px-8',
-            // Min height for full viewport
-            'min-h-screen'
+            'px-6 pb-8',
+            // Min height
+            'min-h-screen',
+            // White background like Supervity
+            'bg-white'
           )}
           tabIndex={-1}
         >

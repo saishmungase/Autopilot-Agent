@@ -86,6 +86,13 @@ import {
   GripVertical,
   Repeat,
   Flag,
+  Phone,
+  MapPin,
+  Mic,
+  MicOff,
+  LogIn,
+  UserCheck,
+  ClipboardList,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -217,6 +224,19 @@ export const Icons = {
   // Misc
   repeat: Repeat,
   flag: Flag,
+
+  // Contact & Location
+  phone: Phone,
+  mapPin: MapPin,
+
+  // Audio
+  mic: Mic,
+  micOff: MicOff,
+
+  // Auth
+  logIn: LogIn,
+  userCheck: UserCheck,
+  clipboardList: ClipboardList,
 
   // Helper to enforce brand style on any raw Lucide icon if needed
   brandStyle: {
