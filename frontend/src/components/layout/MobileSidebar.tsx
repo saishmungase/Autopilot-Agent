@@ -18,14 +18,17 @@ const navItems = [
   {
     title: 'Platform',
     items: [
-      { href: '/', label: 'Dashboard', icon: Icons.dashboard },
-      { href: '/workbench', label: 'Workbench', icon: Icons.workbench },
+      { href: '/command-center', label: 'Dashboard', icon: Icons.dashboard, external: false },
+      { href: '/workbench', label: 'Workbench', icon: Icons.workbench, external: false },
+      { href: '/', label: 'Website', icon: Icons.globe, external: true },
+      { href: '/sales', label: 'Sales Portal', icon: Icons.barChart, external: false },
+      { href: '/playbook', label: 'Sales Playbook', icon: Icons.bookmark, external: false },
     ],
   },
   {
     title: 'System',
     items: [
-      { href: '/settings', label: 'Settings', icon: Icons.settings },
+      { href: '/settings', label: 'Settings', icon: Icons.settings, external: false },
     ],
   },
 ]
@@ -35,29 +38,47 @@ interface NavLinkProps {
   icon: React.ElementType
   children: React.ReactNode
   onClick?: () => void
+  external?: boolean
 }
 
-function NavLink({ href, icon: Icon, children, onClick }: NavLinkProps) {
+function NavLink({ href, icon: Icon, children, onClick, external }: NavLinkProps) {
   const pathname = usePathname()
-  const isActive = pathname === href
+  const isActive = !external && pathname === href
+
+  const className = cn(
+    'flex items-center gap-3 rounded-xl px-4 py-3',
+    'text-base font-medium transition-all duration-200',
+    isActive
+      ? 'bg-brand-navy text-white'
+      : 'text-brand-navy/70 hover:bg-brand-light hover:text-brand-navy'
+  )
+
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onClick}
+        className={className}
+      >
+        <Icon strokeWidth={1.5} className="h-5 w-5 shrink-0 text-brand-navy/60" />
+        <span>{children}</span>
+      </a>
+    )
+  }
 
   return (
     <Link
       href={href}
       onClick={onClick}
-      className={cn(
-        'flex items-center gap-3 rounded-xl px-4 py-3',
-        'text-base font-medium transition-all duration-200',
-        isActive
-          ? 'bg-brand-navy text-white'
-          : 'text-brand-muted hover:bg-black/[0.04] hover:text-brand-navy'
-      )}
+      className={className}
     >
       <Icon
         strokeWidth={1.5}
         className={cn(
           'h-5 w-5 shrink-0',
-          isActive ? 'text-white' : 'text-brand-muted'
+          isActive ? 'text-white' : 'text-brand-navy/60'
         )}
       />
       <span>{children}</span>
@@ -88,7 +109,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               <SheetTitle className='font-display text-lg font-bold tracking-tight text-brand-navy'>
                 AutoPilot
               </SheetTitle>
-              <span className='text-[10px] font-medium uppercase tracking-widest text-brand-muted'>
+              <span className='text-[10px] font-medium uppercase tracking-widest text-brand-navy/50'>
                 Command Center
               </span>
             </div>
@@ -105,7 +126,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               key={section.title}
               className={cn(sectionIndex > 0 && 'mt-6')}
             >
-              <p className='mb-2 px-4 text-[10px] font-semibold uppercase tracking-widest text-brand-muted/70'>
+              <p className='mb-2 px-4 text-[10px] font-semibold uppercase tracking-widest text-brand-navy/40'>
                 {section.title}
               </p>
               <div className='space-y-1'>
@@ -115,6 +136,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                     href={item.href}
                     icon={item.icon}
                     onClick={onClose}
+                    external={item.external}
                   >
                     {item.label}
                   </NavLink>

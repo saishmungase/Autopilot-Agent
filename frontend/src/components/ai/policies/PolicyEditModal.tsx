@@ -338,7 +338,7 @@ export function PolicyEditModal({ policy, isOpen, onClose, onSave }: PolicyEditM
                       <div className="flex items-center gap-2 mb-1">
                         <Icons.grid className={cn(
                           'h-5 w-5',
-                          formData.policy_type === 'logical' ? 'text-blue-600' : 'text-gray-400'
+                          formData.policy_type === 'logical' ? 'text-blue-600' : 'text-gray-500'
                         )} />
                         <span className={cn(
                           'font-medium',
@@ -364,7 +364,7 @@ export function PolicyEditModal({ policy, isOpen, onClose, onSave }: PolicyEditM
                       <div className="flex items-center gap-2 mb-1">
                         <Icons.brain className={cn(
                           'h-5 w-5',
-                          formData.policy_type === 'natural_language' ? 'text-purple-600' : 'text-gray-400'
+                          formData.policy_type === 'natural_language' ? 'text-purple-600' : 'text-gray-500'
                         )} />
                         <span className={cn(
                           'font-medium',

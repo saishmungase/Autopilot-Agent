@@ -94,7 +94,7 @@ function StepIndicator({ currentStep, steps }: { currentStep: number; steps: str
               ? 'bg-emerald-500 text-white'
               : idx === currentStep
                 ? 'bg-brand-cornflower text-white'
-                : 'bg-gray-200 text-gray-500'
+                : 'bg-gray-200 text-gray-600'
           )}>
             {idx < currentStep ? (
               <Icons.check className="h-4 w-4" />
@@ -731,7 +731,7 @@ export function CreateWithAI({ onPolicyCreate, onCancel }: CreateWithAIProps) {
                       #{tag}
                       <button
                         onClick={() => handleRemoveTag(tag)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-500 hover:text-gray-600"
                       >
                         <Icons.close className="h-3 w-3" />
                       </button>

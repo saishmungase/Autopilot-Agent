@@ -331,7 +331,7 @@ export default function RegisterPage() {
                 {errors.password ? (
                   <p className='text-xs text-red-500'>{errors.password}</p>
                 ) : (
-                  <p className='text-xs text-gray-400'>
+                  <p className='text-xs text-gray-500'>
                     Min 12 chars with uppercase, lowercase, number, and special character
                   </p>
                 )}

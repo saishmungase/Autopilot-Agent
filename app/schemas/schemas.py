@@ -33,7 +33,13 @@ class LeadDataContract(BaseModel):
     contact: ContactInfo
     lead_score: float = Field(ge=0.0, le=1.0)
     assigned_rep_id: Optional[int] = None
-    status: Literal["new", "assigned", "in_progress", "closed"] = "new"
+    status: str = "new"  # new | assigned | in_progress | closed | blocked | unqualified
+
+    # Policy Engine fields — populated on violation
+    workbench_required: bool = False
+    policy_violation: Optional[str] = None   # e.g. "POLICY-2"
+    policy_reason: Optional[str] = None      # human-readable explanation
+
 
 
 # ---------------------------------------------------------------------------

@@ -1,14 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Shield, Phone, MessageCircle, X, Send, ShieldCheck, ArrowRight, Heart, Umbrella, Car, TrendingUp, Clock, Award, Users, Mail, MapPin, Loader2, CheckCircle2 } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type PolicyType = 'life' | 'health' | 'car' | 'home' | 'unknown'
-type FormStatus = 'idle' | 'loading' | 'success' | 'error'
-
 interface ChatMessage {
   role: 'bot' | 'user'
   text: string
@@ -19,390 +16,633 @@ function genSessionId() {
   return `chat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────────
-function Input({
-  label,
-  required,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; required?: boolean }) {
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+function Navbar() {
   return (
-    <div>
-      <label className="mb-1.5 block text-sm font-medium text-gray-700">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        {...props}
-        required={required}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-      />
-    </div>
+    <>
+      {/* Glassmorphic backdrop blur effect */}
+      <div className="fixed top-0 inset-x-0 h-24 bg-gradient-to-b from-background/80 via-background/40 to-transparent backdrop-blur-xl z-30 pointer-events-none" />
+      
+      <header className="fixed top-0 inset-x-0 z-40 px-6 py-4">
+        <nav className="max-w-6xl mx-auto glass rounded-full px-5 py-2.5 flex items-center justify-between">
+          <a href="#" className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-gradient-accent flex items-center justify-center glow-emerald">
+              <Shield className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="font-semibold tracking-tight">SecurePulse</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">Insurance</span>
+          </a>
+          <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
+            <a href="#about" className="hover:text-foreground transition-colors">About</a>
+            <a href="#coverage" className="hover:text-foreground transition-colors">Coverage</a>
+            <a href="#contact" className="hover:text-foreground transition-colors">Get a Quote</a>
+            <a href="#contact-info" className="hover:text-foreground transition-colors">Contact</a>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="/command-center"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium hover:bg-emerald-500/20 transition-all"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span className="hidden sm:inline">Command Center</span>
+            </a>
+            <a
+              href="tel:9822983444"
+              className="inline-flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-full bg-foreground text-background font-medium hover:opacity-90 transition-opacity"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">98229 83444</span>
+            </a>
+          </div>
+        </nav>
+      </header>
+    </>
   )
 }
 
-// ─── Quote Form Modal ─────────────────────────────────────────────────────────
-function QuoteModal({ onClose }: { onClose: () => void }) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [policy, setPolicy] = useState<PolicyType>('life')
-  const [status, setStatus] = useState<FormStatus>('idle')
-  const [error, setError] = useState('')
-
-  const policies: { value: PolicyType; label: string }[] = [
-    { value: 'life', label: 'Life' },
-    { value: 'health', label: 'Health' },
-    { value: 'car', label: 'Auto' },
-    { value: 'home', label: 'Home' },
-    { value: 'unknown', label: "Not sure" },
-  ]
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setStatus('loading')
-    setError('')
-    try {
-      const res = await fetch(`${API_URL}/api/intake/process-lead`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          policy_type: policy,
-          contact: { name, email, phone },
-          lead_score: 0.5,
-        }),
-      })
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}))
-        throw new Error(d.detail || 'Submission failed')
-      }
-      setStatus('success')
-    } catch (err) {
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    }
-  }
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function Hero() {
+  const scrollToContact = () => {
+    document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <motion.div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
-      />
-      <motion.div
-        className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl"
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 16 }}
-        transition={{ duration: 0.25 }}
-      >
-        <div className="h-1 w-full rounded-t-2xl bg-gradient-to-r from-indigo-500 to-violet-500" />
-        <div className="p-6">
-          <div className="mb-5 flex items-start justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Get a Free Quote</h2>
-              <p className="mt-0.5 text-sm text-gray-500">A rep will reach out within 24 hours.</p>
-            </div>
-            <button onClick={onClose} className="ml-4 flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
+    <section className="relative overflow-hidden pt-32 pb-24 px-6">
+      <div className="max-w-6xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-8 text-xs tracking-wider uppercase text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald" />
+          Trusted by 50,000+ Policyholders
+        </div>
+        <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05] mb-6">
+          Intelligent Coverage.<br />
+          <span className="text-gradient">Accelerated Solutions.</span>
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          Comprehensive health, life, auto, and wealth protection — backed by dedicated specialists who respond in real time.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={scrollToContact}
+            className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-accent text-primary-foreground font-medium text-sm glow-emerald hover:scale-[1.02] transition-transform"
+          >
+            Get a Quote / Submit Claim
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+          <a
+            href="tel:9822983444"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full glass text-foreground font-medium text-sm hover:bg-white/5 transition-colors"
+          >
+            <Phone className="h-4 w-4 text-emerald" />
+            Call 98229 83444
+          </a>
+        </div>
 
-          {status === 'success' ? (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 py-8 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-                <svg className="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">Request submitted!</p>
-                <p className="mt-1 text-sm text-gray-500">We&apos;ll be in touch within 24 hours.</p>
-              </div>
-              <button onClick={onClose} className="mt-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors">Close</button>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">I&apos;m interested in</label>
-                <div className="flex flex-wrap gap-2">
-                  {policies.map(p => (
-                    <button key={p.value} type="button" onClick={() => setPolicy(p.value)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${policy === p.value ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'}`}>
-                      {p.label}
-                    </button>
-                  ))}
+        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {[
+            { v: "50K+", l: "Policyholders" },
+            { v: "$2.4B", l: "Claims Paid" },
+            { v: "24/7", l: "Specialist Support" },
+            { v: "A+", l: "Financial Rating" },
+          ].map((s) => (
+            <div key={s.l} className="glass rounded-2xl px-4 py-5">
+              <div className="text-2xl font-semibold text-gradient">{s.v}</div>
+              <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Company Sections ─────────────────────────────────────────────────────────
+function CompanySections() {
+  const coverages = [
+    { icon: Heart, title: "Health Insurance", desc: "Family and individual plans with cashless hospitalization at 12,000+ network hospitals." },
+    { icon: Umbrella, title: "Life Insurance", desc: "Term and whole-life policies designed to protect what matters most to your loved ones." },
+    { icon: Car, title: "Auto / Car Insurance", desc: "Comprehensive vehicle cover with 24/7 roadside assistance and instant claim approval." },
+    { icon: TrendingUp, title: "Wealth & Asset Management", desc: "Long-term wealth-building strategies and asset protection for high net-worth clients." },
+  ];
+
+  const features = [
+    { icon: ShieldCheck, title: "Licensed & Regulated", desc: "Fully IRDAI-licensed with A+ financial strength rating." },
+    { icon: Clock, title: "Real-Time Claims", desc: "Average claim settlement under 4 hours for routine cases." },
+    { icon: Award, title: "Award-Winning Service", desc: "Voted 'Insurer of the Year' three years running." },
+    { icon: Users, title: "Dedicated Specialists", desc: "A personal advisor assigned to every policyholder." },
+  ];
+
+  return (
+    <>
+      {/* About */}
+      <section id="about" className="px-6 pb-24">
+        <div className="max-w-5xl mx-auto glass-strong rounded-3xl p-8 md:p-12 text-center">
+          <div className="text-xs uppercase tracking-[0.2em] text-emerald mb-3">About SecurePulse</div>
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight mb-5">
+            Protection, reimagined for the modern policyholder.
+          </h2>
+          <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            Founded in 2008, SecurePulse Insurance is a leading enterprise insurance firm trusted by individuals,
+            families, and Fortune 500 employers. We combine deep underwriting expertise with a relentless focus on
+            speed, transparency, and human-centered service — so the moment you need us, we&apos;re already there.
+          </p>
+        </div>
+      </section>
+
+      {/* Coverage */}
+      <section id="coverage" className="px-6 pb-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-xs uppercase tracking-[0.2em] text-electric mb-3">Our Coverage</div>
+            <h2 className="text-3xl md:text-5xl font-semibold tracking-tight">Built for every stage of life</h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+              Four pillars of protection, each tailored by a dedicated specialist team.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {coverages.map((c) => {
+              const Icon = c.icon;
+              return (
+                <div key={c.title} className="glass rounded-2xl p-6 hover:bg-white/5 hover:border-emerald/30 transition-all group">
+                  <div className="h-11 w-11 rounded-xl bg-gradient-accent flex items-center justify-center mb-4 glow-emerald group-hover:scale-110 transition-transform">
+                    <Icon className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <h3 className="font-semibold mb-2">{c.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Why us */}
+      <section className="px-6 pb-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-xs uppercase tracking-[0.2em] text-emerald mb-3">Why SecurePulse</div>
+            <h2 className="text-3xl md:text-5xl font-semibold tracking-tight">A standard of care above the rest</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="glass rounded-2xl p-6">
+                  <Icon className="h-6 w-6 text-emerald mb-3" />
+                  <h3 className="font-semibold mb-1.5 text-sm">{f.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}
+
+// ─── Intake Portal ────────────────────────────────────────────────────────────
+function IntakePortal() {
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const policyTypes = [
+    "Health Insurance",
+    "Life Insurance",
+    "Auto/Car Insurance",
+    "Wealth & Asset Management",
+  ];
+
+  const inputCls = "w-full px-4 py-3 rounded-xl bg-black/30 border border-border focus:border-emerald focus:ring-2 focus:ring-emerald/30 outline-none transition-all text-foreground placeholder:text-muted-foreground/60";
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const form = e.target as HTMLFormElement;
+    const fullName = (form.elements.namedItem('fullName') as HTMLInputElement).value;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
+    const policyType = (form.elements.namedItem('policyType') as HTMLSelectElement).value;
+    const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
+
+    try {
+      // Use the workflow API from the UI folder
+      const WORKFLOW_API_URL = 'https://auto-workflow-api.supervity.ai/api/v1/workflow-runs/execute/stream';
+      const BEARER_TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJCOVg3RVFFWE8td25ucjBJd3Vjbm5vQWlVcWdDM1JpNzh2aGMxMG9xTmJnIn0.eyJleHAiOjE3ODY3MTI5MTMsImlhdCI6MTc3ODkzOTIwNywianRpIjoiMjgzZTY4MWEtNWQ4NS00ZWU0LTk1OTItOWNlNzEyODAxM2ZlIiwiaXNzIjoiaHR0cHM6Ly9hdXRvLXNzby5zdXBlcnZpdHkuYWkvYXV0aC9yZWFsbXMvdGVjaGZvcmNlIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjA4ZTQzNzI4LTU4NDYtNDA3Ni04YmJiLTM3MTRjOWI1Mjc0NyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJvdC1tYWtlciIsInNpZCI6IjMwMjM4OTJiLTUwMmMtNGJjZS04NmQ3LWIxZTliNTc2N2ViOCIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL2F1dG8uc3VwZXJ2aXR5LmFpIiwiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy10ZWNoZm9yY2UiLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlNhaXNoIE11bmdhc2UiLCJncm91cHMiOlsiL0dpdFB1c2gvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvU2Fpc2ggTXVuZ2FzZSBXb3Jrc3BhY2UvUm9sZXMvQWRtaW5zIiwiL1NhaXNoIE11bmdhc2UgV29ya3NwYWNlL0hhY2thdGhvbi9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaCIsIi9TYWlzaCBNdW5nYXNlIFdvcmtzcGFjZSJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIiwiZ2l2ZW5fbmFtZSI6IlNhaXNoIiwiZmFtaWx5X25hbWUiOiJNdW5nYXNlIiwiZW1haWwiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIn0.EvC0p4HaLqDDRHTDT2drl_2Gbp1_4HBUddy_Nn6uOxYIrKtIqHMhIDmNgUD8wzZDw71JoWu7WwGzNhGpz_c-CIHJkHQ-E3oVjZoHmAMWvx6WqEYVEqbkZ3vsw0E10tLX-SIB-qZ-Gr-8SYYK_cxKwotf3MXL97DF97bzj5568bis1b-CRPxvxPB8Bm5o6VQeisUmArT80qA1ML2bjqq2LB_zcgOdEP8TFiIwllPavOsH51DldOzzCc_FdnPS15U4GvCsOU0uhv3Cnc85mT6fhwy7m8VxUukH0h49C6cS-ro4I6EgGLcpR8JoCJSYS8fuUqs2qJHYX08iSRqG-gvfmg';
+      const WORKFLOW_ID = '019e311c-a949-7000-9e6d-03c12d18031b';
+
+      // Create FormData for the external API
+      const formData = new FormData();
+      formData.append('workflowId', WORKFLOW_ID);
+      formData.append('inputs[source]', 'form');
+      
+      // Combine form fields into payload_text
+      const payloadText = `Full Name: ${fullName}, Email: ${email}, Phone: ${phone}, Policy Type: ${policyType}, Comments: ${message || 'No additional comments'}`;
+      formData.append('inputs[payload_text]', payloadText);
+
+      console.log('Submitting to API:', WORKFLOW_API_URL);
+      console.log('Workflow ID:', WORKFLOW_ID);
+      console.log('Payload text:', payloadText);
+
+      // Make request to external API
+      const response = await fetch(WORKFLOW_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${BEARER_TOKEN}`,
+          'x-source': 'v1',
+        },
+        body: formData,
+      });
+
+      const responseText = await response.text();
+      console.log('API Response Status:', response.status);
+      console.log('API Response Body:', responseText);
+
+      if (!response.ok) {
+        console.error('External API error:', response.status, responseText);
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+
+      // Try to parse as JSON
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch {
+        responseData = { raw: responseText };
+      }
+
+      console.log('Workflow execution successful:', responseData);
+      setLoading(false);
+      setSubmitted(true);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to submit form. Please try again.');
+      console.error('Form submission error:', err);
+    }
+  };
+
+  return (
+    <section id="contact" className="px-6 pb-24">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <div className="text-xs uppercase tracking-[0.2em] text-emerald mb-3">Get a Quote · File a Claim</div>
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight">Reach a SecurePulse Specialist</h2>
+          <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+            Send us your details via the form below — a dedicated advisor will respond within minutes.
+          </p>
+        </div>
+
+        <div className="glass-strong rounded-3xl p-5 md:p-8 shadow-[0_30px_80px_-20px_oklch(0_0_0/0.6)]">
+          {submitted ? (
+            <div className="flex flex-col items-center justify-center h-full text-center py-16 animate-slide-up">
+              <div className="h-16 w-16 rounded-full bg-emerald/15 flex items-center justify-center mb-4 glow-emerald">
+                <CheckCircle2 className="h-8 w-8 text-emerald" />
               </div>
-              <Input label="Full Name" required placeholder="Jane Doe" value={name} onChange={e => setName(e.target.value)} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input label="Email" required type="email" placeholder="jane@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-                <Input label="Phone" required type="tel" placeholder="555-1234" value={phone} onChange={e => setPhone(e.target.value)} />
+              <h3 className="text-2xl font-semibold">Lead Submitted Successfully</h3>
+              <p className="text-muted-foreground mt-2 max-w-md">
+                A SecurePulse specialist will contact you within 24 hours.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-5 animate-slide-up">
+              {error && (
+                <div className="md:col-span-2 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+              
+              <label className="block">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Full Name</span>
+                <input name="fullName" required className={inputCls} placeholder="Jane Doe" />
+              </label>
+              <label className="block">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Email</span>
+                <input name="email" required type="email" className={inputCls} placeholder="jane@company.com" />
+              </label>
+              <label className="block">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Phone Number</span>
+                <input name="phone" required className={inputCls} placeholder="+1 (555) 123-4567" />
+              </label>
+              <label className="block">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Policy Type</span>
+                <select name="policyType" required className={inputCls} defaultValue="">
+                  <option value="" disabled>Select a policy…</option>
+                  {policyTypes.map((p) => <option key={p} className="bg-card">{p}</option>)}
+                </select>
+              </label>
+              <div className="md:col-span-2">
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Message / Description</span>
+                  <textarea name="message" rows={4} className={inputCls} placeholder="Briefly describe your needs or claim…" />
+                </label>
               </div>
-              {status === 'error' && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
-              <button type="submit" disabled={status === 'loading'}
-                className="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors">
-                {status === 'loading' ? 'Submitting…' : 'Request a Quote →'}
-              </button>
+              <div className="md:col-span-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-gradient-accent text-primary-foreground font-medium text-sm glow-emerald hover:scale-[1.02] transition-transform disabled:opacity-70"
+                >
+                  {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : <>Request a Callback <Send className="h-4 w-4" /></>}
+                </button>
+              </div>
             </form>
           )}
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </section>
   )
 }
 
-// ─── AI Chatbot Panel ─────────────────────────────────────────────────────────
-function ChatbotPanel() {
-  const [sessionId] = useState(genSessionId)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
-  const [started, setStarted] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
+// ─── Contact Section ──────────────────────────────────────────────────────────
+function ContactSection() {
+  return (
+    <section id="contact-info" className="px-6 pb-24">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="text-xs uppercase tracking-[0.2em] text-electric mb-3">Get in Touch</div>
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight">We&apos;re here when you need us</h2>
+          <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+            Reach a SecurePulse specialist directly — no menus, no wait queues.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a
+            href="tel:9822983444"
+            className="glass-strong rounded-2xl p-6 hover:border-emerald/40 hover:bg-emerald/5 transition-all group"
+          >
+            <Phone className="h-6 w-6 text-emerald mb-3 group-hover:scale-110 transition-transform" />
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">24/7 Helpline</div>
+            <div className="text-lg font-semibold">98229 83444</div>
+          </a>
+          <a
+            href="mailto:care@securepulse.com"
+            className="glass-strong rounded-2xl p-6 hover:border-electric/40 hover:bg-electric/5 transition-all group"
+          >
+            <Mail className="h-6 w-6 text-electric mb-3 group-hover:scale-110 transition-transform" />
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Email Support</div>
+            <div className="text-lg font-semibold">care@securepulse.com</div>
+          </a>
+          <div className="glass-strong rounded-2xl p-6">
+            <MapPin className="h-6 w-6 text-emerald mb-3" />
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Head Office</div>
+            <div className="text-sm font-medium leading-relaxed">12 Marine Drive,<br />Mumbai 400020, India</div>
+          </div>
+          <div className="glass-strong rounded-2xl p-6">
+            <Clock className="h-6 w-6 text-electric mb-3" />
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Office Hours</div>
+            <div className="text-sm font-medium leading-relaxed">Mon – Sat<br />9:00 AM – 8:00 PM IST</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Chat Widget ──────────────────────────────────────────────────────────────
+function ChatWidget() {
+  const [open, setOpen] = useState(false);
+  const [sessionId] = useState(genSessionId);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+    bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading, open]);
+
+  // Submit collected chat data to workflow API
+  const submitChatData = async () => {
+    if (leadSubmitted) return; // Already submitted
+    
+    try {
+      const WORKFLOW_API_URL = 'https://auto-workflow-api.supervity.ai/api/v1/workflow-runs/execute/stream';
+      const BEARER_TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJCOVg3RVFFWE8td25ucjBJd3Vjbm5vQWlVcWdDM1JpNzh2aGMxMG9xTmJnIn0.eyJleHAiOjE3ODY3MTI5MTMsImlhdCI6MTc3ODkzOTIwNywianRpIjoiMjgzZTY4MWEtNWQ4NS00ZWU0LTk1OTItOWNlNzEyODAxM2ZlIiwiaXNzIjoiaHR0cHM6Ly9hdXRvLXNzby5zdXBlcnZpdHkuYWkvYXV0aC9yZWFsbXMvdGVjaGZvcmNlIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjA4ZTQzNzI4LTU4NDYtNDA3Ni04YmJiLTM3MTRjOWI1Mjc0NyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJvdC1tYWtlciIsInNpZCI6IjMwMjM4OTJiLTUwMmMtNGJjZS04NmQ3LWIxZTliNTc2N2ViOCIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL2F1dG8uc3VwZXJ2aXR5LmFpIiwiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy10ZWNoZm9yY2UiLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlNhaXNoIE11bmdhc2UiLCJncm91cHMiOlsiL0dpdFB1c2gvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvU2Fpc2ggTXVuZ2FzZSBXb3Jrc3BhY2UvUm9sZXMvQWRtaW5zIiwiL1NhaXNoIE11bmdhc2UgV29ya3NwYWNlL0hhY2thdGhvbi9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaCIsIi9TYWlzaCBNdW5nYXNlIFdvcmtzcGFjZSJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIiwiZ2l2ZW5fbmFtZSI6IlNhaXNoIiwiZmFtaWx5X25hbWUiOiJNdW5nYXNlIiwiZW1haWwiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIn0.EvC0p4HaLqDDRHTDT2drl_2Gbp1_4HBUddy_Nn6uOxYIrKtIqHMhIDmNgUD8wzZDw71JoWu7WwGzNhGpz_c-CIHJkHQ-E3oVjZoHmAMWvx6WqEYVEqbkZ3vsw0E10tLX-SIB-qZ-Gr-8SYYK_cxKwotf3MXL97DF97bzj5568bis1b-CRPxvxPB8Bm5o6VQeisUmArT80qA1ML2bjqq2LB_zcgOdEP8TFiIwllPavOsH51DldOzzCc_FdnPS15U4GvCsOU0uhv3Cnc85mT6fhwy7m8VxUukH0h49C6cS-ro4I6EgGLcpR8JoCJSYS8fuUqs2qJHYX08iSRqG-gvfmg';
+      const WORKFLOW_ID = '019e311c-a949-7000-9e6d-03c12d18031b';
+
+      // Combine all chat messages into payload_text
+      const chatHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.text}`).join('\n');
+      const payloadText = `Chat Session ID: ${sessionId}\n\n${chatHistory}`;
+
+      const formData = new FormData();
+      formData.append('workflowId', WORKFLOW_ID);
+      formData.append('inputs[source]', 'chatbot');
+      formData.append('inputs[payload_text]', payloadText);
+
+      console.log('Submitting chatbot data to workflow API');
+      console.log('Payload text:', payloadText);
+
+      const response = await fetch(WORKFLOW_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${BEARER_TOKEN}`,
+          'x-source': 'v1',
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        console.log('Chatbot data submitted successfully');
+        setLeadSubmitted(true);
+      } else {
+        console.error('Failed to submit chatbot data:', response.status);
+      }
+    } catch (error) {
+      console.error('Error submitting chatbot data:', error);
+    }
+  };
 
   const sendToAgent = async (userMsg: string | null) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, message: userMsg }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (data.reply) {
-        setMessages(prev => [...prev, { role: 'bot', text: data.reply }])
+        setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
       }
-      if (data.done) setDone(true)
+      if (data.done) {
+        setDone(true);
+        // Submit chat data when conversation is done
+        setTimeout(() => submitChatData(), 500);
+      }
     } catch {
-      setMessages(prev => [...prev, { role: 'bot', text: "Sorry, I'm having trouble connecting. Please try again." }])
+      setMessages(prev => [...prev, { role: 'bot', text: "Sorry, I'm having trouble connecting. Please try again." }]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleStart = () => {
-    setStarted(true)
-    sendToAgent(null)
-  }
+    setStarted(true);
+    sendToAgent(null);
+  };
 
-  const handleSend = async () => {
-    const msg = input.trim()
-    if (!msg || loading || done) return
-    setInput('')
-    setMessages(prev => [...prev, { role: 'user', text: msg }])
-    await sendToAgent(msg)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
+  const send = (text: string) => {
+    if (!text.trim() || loading || done) return;
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text }]);
+    sendToAgent(text);
+  };
 
   const handleReset = async () => {
     await fetch(`${API_URL}/api/chat/reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: sessionId }),
-    })
-    setMessages([])
-    setDone(false)
-    setStarted(false)
-    setInput('')
-  }
+    });
+    setMessages([]);
+    setDone(false);
+    setStarted(false);
+    setInput('');
+    setLeadSubmitted(false);
+  };
+
+  const handleClose = () => {
+    // Submit chat data when user closes the window if there are messages
+    if (started && messages.length > 0 && !leadSubmitted) {
+      submitChatData();
+    }
+    setOpen(false);
+  };
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 bg-indigo-600 px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-          <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-          </svg>
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">Vity AI Assistant</p>
-          <p className="text-xs text-indigo-200">Powered by Gemini 2.0 Flash</p>
-        </div>
-        {started && (
-          <button onClick={handleReset} className="text-xs text-indigo-200 hover:text-white transition-colors">
-            Reset
-          </button>
-        )}
-      </div>
+    <>
+      {/* Floating button */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Open SecurePulse AI chat"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-accent flex items-center justify-center glow-emerald hover:scale-110 transition-transform"
+      >
+        {open ? <X className="h-6 w-6 text-primary-foreground" /> : <MessageCircle className="h-6 w-6 text-primary-foreground" />}
+        {!open && <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-electric ring-2 ring-background pulse-dot" />}
+      </button>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {!started ? (
-          <div className="flex h-full flex-col items-center justify-center gap-4 py-8 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50">
-              <svg className="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-              </svg>
+      {/* Chat window */}
+      {open && (
+        <div className="fixed bottom-24 right-6 z-50 w-[min(380px,calc(100vw-3rem))] h-[540px] max-h-[calc(100vh-8rem)] rounded-3xl flex flex-col overflow-hidden animate-slide-up shadow-[0_30px_80px_-20px_oklch(0_0_0/0.7)] bg-card/95 backdrop-blur-2xl border border-border">
+          {/* Header */}
+          <div className="flex items-center gap-3 p-4 border-b border-border bg-gradient-accent">
+            <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-white" />
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">Chat with our AI</p>
-              <p className="mt-1 text-sm text-gray-500 max-w-xs">Tell us about your insurance needs and we&apos;ll connect you with the right rep.</p>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-white">SecurePulse AI Assistant</div>
+              <div className="text-xs text-white/80 inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-white pulse-dot" /> Online
+              </div>
             </div>
-            <button onClick={handleStart}
-              className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200">
-              Start Chat
+            <button onClick={handleClose} className="text-white/70 hover:text-white transition-colors">
+              <X className="h-4 w-4" />
             </button>
           </div>
-        ) : (
-          <>
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-indigo-600 text-white rounded-br-sm'
-                    : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                }`}>
-                  {msg.text}
+
+          {/* Body */}
+          <div ref={bodyRef} className="flex-1 overflow-y-auto p-4 space-y-2.5">
+            {!started ? (
+              <div className="flex h-full flex-col items-center justify-center gap-4 py-8 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald/10">
+                  <Shield className="h-8 w-8 text-emerald" />
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-gray-100 px-4 py-3">
-                  {[0, 1, 2].map(i => (
-                    <span key={i} className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                  ))}
+                <div>
+                  <p className="font-semibold">Chat with our AI</p>
+                  <p className="mt-1 text-sm text-muted-foreground max-w-xs">Tell us about your insurance needs and we&apos;ll connect you with the right specialist.</p>
                 </div>
+                <button onClick={handleStart}
+                  className="rounded-xl bg-gradient-accent px-6 py-2.5 text-sm font-semibold text-primary-foreground glow-emerald hover:scale-105 transition-transform">
+                  Start Chat
+                </button>
               </div>
+            ) : (
+              <>
+                {messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`max-w-[85%] px-3.5 py-2.5 text-sm rounded-2xl animate-slide-up ${
+                      m.role === 'user'
+                        ? 'ml-auto bg-gradient-accent text-white rounded-tr-sm'
+                        : 'bg-secondary text-foreground rounded-tl-sm'
+                    }`}
+                  >
+                    {m.text}
+                  </div>
+                ))}
+                {loading && (
+                  <div className="bg-secondary rounded-2xl rounded-tl-sm px-3.5 py-3 inline-flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} className="h-1.5 w-1.5 rounded-full bg-muted-foreground pulse-dot" style={{ animationDelay: `${i * 0.15}s` }} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
-            <div ref={bottomRef} />
-          </>
-        )}
-      </div>
-
-      {/* Input */}
-      {started && !done && (
-        <div className="border-t border-gray-100 p-3">
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={loading}
-              placeholder="Type your message…"
-              className="flex-1 rounded-xl border border-gray-200 px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-50 transition-all"
-            />
-            <button
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-              </svg>
-            </button>
           </div>
-        </div>
-      )}
 
-      {done && (
-        <div className="border-t border-gray-100 p-3 text-center">
-          <p className="mb-2 text-xs text-gray-500">Conversation complete</p>
-          <button onClick={handleReset} className="rounded-lg border border-gray-200 px-4 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors">
-            Start new chat
-          </button>
+          {/* Input */}
+          {started && !done && (
+            <form
+              onSubmit={(e) => { e.preventDefault(); send(input); }}
+              className="p-3 border-t border-border bg-card/80 backdrop-blur-sm flex gap-2"
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type a message…"
+                className="flex-1 bg-background/60 border border-border rounded-full px-4 py-2.5 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/30 text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                type="submit"
+                className="h-10 w-10 shrink-0 rounded-full bg-gradient-accent flex items-center justify-center glow-emerald hover:scale-105 transition-transform"
+                aria-label="Send"
+              >
+                <Send className="h-4 w-4 text-primary-foreground" />
+              </button>
+            </form>
+          )}
+
+          {done && (
+            <div className="border-t border-border p-3 text-center bg-card/80 backdrop-blur-sm">
+              <p className="mb-2 text-xs text-muted-foreground">Conversation complete</p>
+              <button onClick={handleReset} className="rounded-lg border border-border px-4 py-1.5 text-xs font-medium hover:border-emerald hover:text-emerald transition-colors">
+                Start new chat
+              </button>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   )
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const [showModal, setShowModal] = useState(false)
-
   return (
-    <div className="min-h-screen bg-[#F7F8FC]">
-      {/* Nav */}
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
-              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-900">Vity Insurance</span>
-          </div>
-          <a href="/sales" className="rounded-lg border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors">
-            Sales Portal →
-          </a>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="grid gap-8 lg:grid-cols-2">
-
-          {/* Left: Company info + CTA */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex flex-col gap-6">
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-              <div className="mb-6 flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 shadow-md shadow-indigo-200">
-                  <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Vity Insurance</h1>
-                  <p className="text-sm text-gray-500">Your trusted coverage partner</p>
-                </div>
-              </div>
-              <p className="mb-6 text-gray-600 leading-relaxed">
-                We provide comprehensive life, health, auto, and home insurance solutions tailored to your needs. Our expert reps are ready to help you find the right coverage at the right price.
-              </p>
-              <div className="space-y-3">
-                {[
-                  { label: 'Sales Hotline', value: '+1 (800) 848-9200', href: 'tel:+18008489200', icon: 'M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z' },
-                  { label: 'Email', value: 'sales@vity.insurance', href: 'mailto:sales@vity.insurance', icon: 'M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75' },
-                  { label: 'Hours', value: 'Mon–Fri, 8 AM – 6 PM CST', href: '#', icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' },
-                ].map(item => (
-                  <a key={item.label} href={item.href}
-                    className={`flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 transition-colors ${item.href !== '#' ? 'hover:border-indigo-200 hover:bg-indigo-50' : 'pointer-events-none'}`}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-500 shadow-sm border border-gray-100">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d={item.icon} /></svg>
-                    </span>
-                    <div>
-                      <p className="text-xs text-gray-400">{item.label}</p>
-                      <p className="text-sm font-medium text-gray-800">{item.value}</p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <motion.button onClick={() => setShowModal(true)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-              </svg>
-              Request a Free Quote
-            </motion.button>
-
-            <div className="flex flex-wrap gap-2">
-              {['Life Insurance', 'Health Insurance', 'Auto Insurance', 'Home Insurance'].map(tag => (
-                <span key={tag} className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">{tag}</span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Right: Live chatbot */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex flex-col" style={{ minHeight: '520px' }}>
-            <ChatbotPanel />
-          </motion.div>
-        </div>
+    <div className="min-h-screen relative">
+      <Navbar />
+      <main>
+        <Hero />
+        <CompanySections />
+        <IntakePortal />
+        <ContactSection />
       </main>
-
-      <AnimatePresence>
-        {showModal && <QuoteModal onClose={() => setShowModal(false)} />}
-      </AnimatePresence>
+      <footer className="border-t border-border px-6 py-8 text-center text-xs text-muted-foreground">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>© {new Date().getFullYear()} SecurePulse Insurance · IRDAI Licensed</span>
+          <span>24/7 Helpline · <a href="tel:9822983444" className="text-emerald hover:underline">98229 83444</a></span>
+        </div>
+      </footer>
+      <ChatWidget />
     </div>
   )
 }

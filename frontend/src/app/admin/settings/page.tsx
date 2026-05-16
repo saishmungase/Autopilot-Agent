@@ -241,7 +241,7 @@ export default function AdminSettingsPage() {
                 <Label>Add Domain</Label>
                 <div className='flex gap-2'>
                   <div className='relative flex-1'>
-                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'>@</span>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-500'>@</span>
                     <Input
                       type='text'
                       value={newDomain}

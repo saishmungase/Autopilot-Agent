@@ -54,8 +54,8 @@ function SearchInput({
       onClick={onOpenCommandPalette}
       className={cn(
         'group flex h-9 w-64 items-center gap-2 px-3',
-        'rounded-full border border-border/50 bg-white/50',
-        'text-sm text-muted-foreground',
+        'rounded-full border border-[#C8CEEA] bg-white',
+        'text-sm text-gray-600',
         'transition-all duration-300 ease-out',
         'hover:border-brand-cornflower/40 hover:bg-white/90 hover:shadow-sm',
         'hover:w-72',

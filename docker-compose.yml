@@ -1,5 +1,6 @@
 # docker-compose.yml
 # AutoPilot Template — Docker Compose for local development
+# Qdrant: using Qdrant Cloud (no local container needed)
 
 services:
   postgres:
@@ -36,6 +37,10 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-development}
       - AUTH_BYPASS=${AUTH_BYPASS:-true}
+      # Qdrant Cloud — picked up from .env via env_file below
+      - QDRANT_URL=${QDRANT_URL}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-sales_playbook}
     env_file:
       - .env
     depends_on:

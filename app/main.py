@@ -17,6 +17,11 @@ from app.routers.intake import router as intake_router
 from app.routers.sales_agent import router as sales_agent_router
 from app.routers.client import router as client_router
 from app.routers.chat import router as chat_router
+from app.routers.leads import router as leads_router
+from app.routers.analytics import router as analytics_router
+from app.routers.workbench import router as workbench_router
+from app.routers.playbook import router as playbook_router
+from app.routers.supervity import router as supervity_router
 
 # Import your orchestrator (using the correct path we fixed earlier)
 from app.orchestrator.manager import Orchestrator
@@ -62,6 +67,11 @@ app.include_router(intake_router, prefix="/api")
 app.include_router(sales_agent_router, prefix="/api")
 app.include_router(client_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
+app.include_router(leads_router, prefix="/api")
+app.include_router(analytics_router, prefix="/api")
+app.include_router(workbench_router, prefix="/api")
+app.include_router(playbook_router, prefix="/api")
+app.include_router(supervity_router, prefix="/api")
 
 
 @app.on_event("startup")

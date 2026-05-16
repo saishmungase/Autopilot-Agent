@@ -121,7 +121,7 @@ export default function SessionsPage() {
   if (status === 'loading' || isLoading) {
     return (
       <div className='flex min-h-[400px] items-center justify-center'>
-        <Icons.loader className='h-8 w-8 animate-spin text-gray-400' />
+        <Icons.loader className='h-8 w-8 animate-spin text-gray-500' />
       </div>
     )
   }
@@ -129,7 +129,7 @@ export default function SessionsPage() {
   return (
     <div className='space-y-6'>
       {/* Breadcrumb */}
-      <div className='flex items-center gap-2 text-sm text-gray-500'>
+      <div className='flex items-center gap-2 text-sm text-gray-600'>
         <Icons.home className='h-4 w-4' />
         <span>/</span>
         <span>Admin</span>
@@ -141,7 +141,7 @@ export default function SessionsPage() {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-2xl font-semibold text-gray-900'>User Sessions</h1>
-          <p className='text-gray-500 mt-1'>
+          <p className='text-gray-600 mt-1'>
             Monitor and manage active user sessions
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function SessionsPage() {
         <Card className='relative overflow-hidden'>
           <CardWatermark />
           <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-500'>Active Sessions</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>Active Sessions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold text-emerald-600'>
@@ -177,7 +177,7 @@ export default function SessionsPage() {
         <Card className='relative overflow-hidden'>
           <CardWatermark />
           <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-500'>Active Users</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>Active Users</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold'>
@@ -188,7 +188,7 @@ export default function SessionsPage() {
         <Card className='relative overflow-hidden'>
           <CardWatermark />
           <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-500'>Unique IPs</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>Unique IPs</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold'>{uniqueIps}</div>
@@ -206,7 +206,7 @@ export default function SessionsPage() {
         </CardHeader>
         <CardContent>
           {sessions.length === 0 ? (
-            <div className='flex flex-col items-center justify-center py-12 text-gray-500'>
+            <div className='flex flex-col items-center justify-center py-12 text-gray-600'>
               <Icons.device className='h-12 w-12 mb-4 text-gray-300' />
               <p>No active sessions</p>
               <p className='text-sm'>Sessions will appear when users log in</p>
@@ -215,7 +215,7 @@ export default function SessionsPage() {
             <div className='overflow-x-auto'>
               <table className='w-full'>
                 <thead>
-                  <tr className='border-b text-left text-sm text-gray-500'>
+                  <tr className='border-b text-left text-sm text-gray-600'>
                     <th className='pb-3 font-medium'>User</th>
                     <th className='pb-3 font-medium'>IP Address</th>
                     <th className='pb-3 font-medium'>Started</th>
@@ -239,14 +239,14 @@ export default function SessionsPage() {
                             <span className='font-medium'>
                               {sess.userName || 'Unknown'}
                             </span>
-                            <span className='text-sm text-gray-500'>
+                            <span className='text-sm text-gray-600'>
                               {sess.userEmail || sess.userId}
                             </span>
                           </div>
                         </td>
                         <td className='py-4'>
                           <span className='inline-flex items-center gap-1 text-sm font-mono'>
-                            <Icons.globe className='h-3 w-3 text-gray-400' />
+                            <Icons.globe className='h-3 w-3 text-gray-500' />
                             {sess.ipAddress || '—'}
                           </span>
                         </td>
@@ -255,7 +255,7 @@ export default function SessionsPage() {
                         </td>
                         <td className='py-4'>
                           <span className='inline-flex items-center gap-1 text-sm'>
-                            <Icons.clock className='h-3 w-3 text-gray-400' />
+                            <Icons.clock className='h-3 w-3 text-gray-500' />
                             {getSessionDuration(sess.start)}
                           </span>
                         </td>

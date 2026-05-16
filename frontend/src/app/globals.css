@@ -4,49 +4,38 @@
 
 @layer base {
   :root {
-    /*
-      SUPERVITY-STYLE DESIGN SYSTEM
-      Pure white content area, soft periwinkle sidebar, indigo primary
-    */
+    --radius: 0.875rem;
+    /* Light theme — white/off-white backgrounds, dark readable text */
+    --background: #ffffff;
+    --foreground: #1a1f36;           /* near-black, high contrast on white */
+    --card: #ffffff;
+    --card-foreground: #1a1f36;
+    --popover: #ffffff;
+    --popover-foreground: #1a1f36;
 
-    /* Background: Pure white — exactly like Supervity */
-    --background: 0 0% 100%;
+    --primary: #3D4B8F;              /* brand-navy */
+    --primary-foreground: #ffffff;
+    --secondary: #F0F2FF;            /* brand-light */
+    --secondary-foreground: #3D4B8F;
+    --muted: #F0F2FF;                /* light lavender chip bg */
+    --muted-foreground: #5a6480;     /* readable gray on white/light bg — ~5.5:1 */
+    --accent: #8B9FE8;               /* brand-cornflower */
+    --accent-foreground: #1a1f36;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #E2E6F8;
+    --input: #E2E6F8;
+    --ring: #3D4B8F;
 
-    /* Foreground: Near-black for body text */
-    --foreground: 224 40% 12%;
+    --emerald: #10b981;
+    --electric: #3b82f6;
+    --success: #10b981;
 
-    /* Card: White with very subtle border */
-    --card: 0 0% 100%;
-    --card-foreground: 224 40% 12%;
-
-    /* Popover */
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 40% 12%;
-
-    /* Primary: Supervity indigo-blue #3D4B8F */
-    --primary: 231 40% 40%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary: Very light periwinkle for sidebar/chips */
-    --secondary: 230 60% 97%;
-    --secondary-foreground: 231 40% 30%;
-
-    /* Muted: Light gray-blue for labels */
-    --muted: 220 20% 96%;
-    --muted-foreground: 220 15% 50%;
-
-    /* Accent: Supervity periwinkle #8B9FE8 */
-    --accent: 230 65% 73%;
-    --accent-foreground: 231 40% 20%;
-
-    /* Destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Borders: Very light, barely visible */
-    --border: 220 15% 91%;
-    --input: 220 15% 93%;
-    --ring: 231 40% 40%;
+    --gradient-hero: none;
+    --gradient-accent: linear-gradient(135deg, #3D4B8F, #8B9FE8);
+    --shadow-glow-emerald: 0 0 40px -10px rgba(16, 185, 129, 0.3);
+    --shadow-glow-electric: 0 0 40px -10px rgba(59, 130, 246, 0.3);
+    --shadow-card: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
 
     /* Charts */
     --chart-1: 231 40% 40%;
@@ -55,21 +44,30 @@
     --chart-4: 38 92% 50%;
     --chart-5: 0 84% 60%;
 
-    /* Radius: Supervity uses ~8px */
-    --radius: 0.5rem;
-
     --sidebar-width: 3.5rem;
     --sidebar-expanded-width: 14rem;
+  }
+
+  .dark {
+    --background: #0f1117;
+    --foreground: #f8fafc;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  * { 
+    border-color: var(--border); 
   }
-
+  
+  html { 
+    scroll-behavior: smooth; 
+  }
+  
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "cv11", "ss01";
+    @apply antialiased;
     font-family: var(--font-geologica), -apple-system, BlinkMacSystemFont,
       'Segoe UI', sans-serif;
   }
@@ -78,11 +76,43 @@
     font-family: var(--font-funnel), -apple-system, BlinkMacSystemFont,
       'Segoe UI', sans-serif;
     font-weight: 600;
-    color: hsl(224 40% 12%);
   }
 }
 
 @layer utilities {
+  .glass {
+    background: rgba(240, 242, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 230, 248, 0.8);
+  }
+  
+  .glass-strong {
+    background: rgba(240, 242, 255, 0.8);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(226, 230, 248, 0.9);
+  }
+  
+  .text-gradient {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .bg-gradient-accent { 
+    background: var(--gradient-accent); 
+  }
+  
+  .glow-emerald { 
+    box-shadow: var(--shadow-glow-emerald); 
+  }
+  
+  .glow-electric { 
+    box-shadow: var(--shadow-glow-electric); 
+  }
+
   /* Supervity sidebar: very light periwinkle/lavender */
   .sv-sidebar {
     background: hsl(230 60% 97%);
@@ -112,18 +142,13 @@
     font-weight: 500;
   }
 
-  /* Text gradient */
-  .text-gradient {
-    @apply bg-gradient-to-r from-brand-navy via-brand-purple to-brand-cornflower bg-clip-text text-transparent;
-  }
-
   /* Shimmer */
   .shimmer {
     background: linear-gradient(
       90deg,
-      hsl(var(--muted)) 0%,
-      hsl(220 20% 98%) 50%,
-      hsl(var(--muted)) 100%
+      #F0F2FF 0%,
+      #f8faff 50%,
+      #F0F2FF 100%
     );
     background-size: 200% 100%;
     animation: shimmer 2s infinite linear;
@@ -141,12 +166,6 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2;
   }
 
-  /* Glass — kept for compatibility */
-  .glass {
-    @apply bg-white/80 backdrop-blur-sm;
-    border: 1px solid hsl(220 15% 91%);
-  }
-
   .glaze {
     background: #ffffff;
   }
@@ -160,3 +179,15 @@
     scroll-behavior: auto !important;
   }
 }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.4); }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.3s ease-out; }

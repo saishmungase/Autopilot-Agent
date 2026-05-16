@@ -43,7 +43,7 @@ function policyColor(type: string) {
 function statusColor(s: string) {
   if (s === 'assigned') return 'bg-blue-50 text-blue-600 border-blue-200'
   if (s === 'closed') return 'bg-green-50 text-green-600 border-green-200'
-  return 'bg-gray-50 text-gray-500 border-gray-200'
+  return 'bg-gray-50 text-gray-600 border-gray-200'
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-const inputCls = "w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+const inputCls = "w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
 
 // ─── Auth Screen ──────────────────────────────────────────────────────────────
 function AuthScreen({ onSuccess }: { onSuccess: (name: string, team: string, token: string) => void }) {
@@ -123,7 +123,7 @@ function AuthScreen({ onSuccess }: { onSuccess: (name: string, team: string, tok
             </svg>
           </div>
           <h1 className="text-xl font-bold text-gray-900">Vity Sales Portal</h1>
-          <p className="mt-1 text-sm text-gray-500">Sign in to manage your leads</p>
+          <p className="mt-1 text-sm text-gray-600">Sign in to manage your leads</p>
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -135,7 +135,7 @@ function AuthScreen({ onSuccess }: { onSuccess: (name: string, team: string, tok
                 type="button"
                 onClick={() => { setMode(m); setError('') }}
                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${
-                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-700'
                 }`}
               >
                 {m === 'signin' ? 'Sign In' : 'Register'}
@@ -199,7 +199,7 @@ function AuthScreen({ onSuccess }: { onSuccess: (name: string, team: string, tok
           </form>
         </div>
 
-        <p className="mt-4 text-center text-xs text-gray-400">
+        <p className="mt-4 text-center text-xs text-gray-500">
         <Link href="/" className="hover:text-indigo-600 transition-colors">← Back to home</Link>
         </p>
       </motion.div>
@@ -215,8 +215,8 @@ function LeadCard({ lead }: { lead: Lead }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-gray-900">{contact.name || '—'}</p>
-          <p className="truncate text-xs text-gray-500">{contact.email}</p>
-          <p className="text-xs text-gray-500">{contact.phone}</p>
+          <p className="truncate text-xs text-gray-600">{contact.email}</p>
+          <p className="text-xs text-gray-600">{contact.phone}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${statusColor(lead.status)}`}>
@@ -235,7 +235,7 @@ function LeadCard({ lead }: { lead: Lead }) {
             style={{ width: `${Math.round((lead.lead_score ?? 0) * 100)}%` }}
           />
         </div>
-        <span className="text-xs text-gray-400">{Math.round((lead.lead_score ?? 0) * 100)}%</span>
+        <span className="text-xs text-gray-500">{Math.round((lead.lead_score ?? 0) * 100)}%</span>
       </div>
     </div>
   )
@@ -299,7 +299,7 @@ function Dashboard({
                   </span>
                 )}
               </p>
-              <p className="text-xs text-gray-400">Sales Dashboard</p>
+              <p className="text-xs text-gray-500">Sales Dashboard</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -331,7 +331,7 @@ function Dashboard({
             { label: 'Completed', value: completed.length, color: 'text-green-600', bg: 'bg-green-50' },
           ].map(stat => (
             <div key={stat.label} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-400">{stat.label}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">{stat.label}</p>
               <p className={`mt-1 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
@@ -356,7 +356,7 @@ function Dashboard({
                   <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <p className="text-sm text-gray-400">No assigned leads yet</p>
+                  <p className="text-sm text-gray-500">No assigned leads yet</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -378,7 +378,7 @@ function Dashboard({
                   <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm text-gray-400">No completed deals yet</p>
+                  <p className="text-sm text-gray-500">No completed deals yet</p>
                 </div>
               ) : (
                 <div className="space-y-3">

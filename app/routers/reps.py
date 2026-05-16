@@ -39,6 +39,35 @@ def login_rep(rep: SalesAgentLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": db_rep.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
+@router.get("")
+def get_all_reps(db: Session = Depends(get_db)):
+    """
+    Get all reps with their current workload for the Command Center dashboard.
+    """
+    from sqlalchemy import func
+    
+    reps = db.query(Rep).all()
+    
+    result = []
+    for rep in reps:
+        # Count assigned leads for this rep
+        assigned_count = db.query(func.count(Lead.lead_id)).filter(
+            Lead.assigned_rep_id == rep.id,
+            Lead.status.in_(["assigned", "in_progress"])
+        ).scalar() or 0
+        
+        result.append({
+            "rep_id": rep.id,
+            "name": rep.name,
+            "policy_type": rep.team,
+            "current_load": assigned_count,
+            "max_load": 10,  # Default max load
+            "is_available": assigned_count < 10,
+        })
+    
+    return result
+
+
 @router.get("/fetch")
 def fetch_assigned_leads(rep_id: int, db: Session = Depends(get_db)):
     assigned_leads = db.query(Lead).filter(Lead.assigned_rep_id == rep_id, Lead.status == "assigned").all()

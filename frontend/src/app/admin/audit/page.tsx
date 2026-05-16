@@ -230,7 +230,7 @@ export default function AuditLogsPage() {
       {/* Header */}
       <div>
         <h1 className='text-2xl font-bold text-brand-navy'>Audit Logs</h1>
-        <p className='text-gray-500'>View and search all system activity</p>
+        <p className='text-gray-600'>View and search all system activity</p>
       </div>
 
       {/* Stats Cards */}
@@ -241,7 +241,7 @@ export default function AuditLogsPage() {
             animate={{ opacity: 1, y: 0 }}
             className='rounded-xl border border-gray-100 bg-white p-4 shadow-sm'
           >
-            <p className='text-sm text-gray-500'>Total Events</p>
+            <p className='text-sm text-gray-600'>Total Events</p>
             <p className='text-2xl font-bold text-brand-navy'>{stats.total_events.toLocaleString()}</p>
           </motion.div>
           <motion.div
@@ -250,7 +250,7 @@ export default function AuditLogsPage() {
             transition={{ delay: 0.1 }}
             className='rounded-xl border border-gray-100 bg-white p-4 shadow-sm'
           >
-            <p className='text-sm text-gray-500'>Today</p>
+            <p className='text-sm text-gray-600'>Today</p>
             <p className='text-2xl font-bold text-green-600'>{stats.events_today.toLocaleString()}</p>
           </motion.div>
           <motion.div
@@ -259,7 +259,7 @@ export default function AuditLogsPage() {
             transition={{ delay: 0.2 }}
             className='rounded-xl border border-gray-100 bg-white p-4 shadow-sm'
           >
-            <p className='text-sm text-gray-500'>This Week</p>
+            <p className='text-sm text-gray-600'>This Week</p>
             <p className='text-2xl font-bold text-blue-600'>{stats.events_this_week.toLocaleString()}</p>
           </motion.div>
           <motion.div
@@ -268,7 +268,7 @@ export default function AuditLogsPage() {
             transition={{ delay: 0.3 }}
             className='rounded-xl border border-gray-100 bg-white p-4 shadow-sm'
           >
-            <p className='text-sm text-gray-500'>Errors</p>
+            <p className='text-sm text-gray-600'>Errors</p>
             <p className='text-2xl font-bold text-red-600'>{stats.recent_errors}</p>
           </motion.div>
           <motion.div
@@ -277,7 +277,7 @@ export default function AuditLogsPage() {
             transition={{ delay: 0.4 }}
             className='rounded-xl border border-gray-100 bg-white p-4 shadow-sm'
           >
-            <p className='text-sm text-gray-500'>Auto (API)</p>
+            <p className='text-sm text-gray-600'>Auto (API)</p>
             <p className='text-2xl font-bold text-orange-600'>{stats.middleware_logs.toLocaleString()}</p>
           </motion.div>
           <motion.div
@@ -286,7 +286,7 @@ export default function AuditLogsPage() {
             transition={{ delay: 0.5 }}
             className='rounded-xl border border-gray-100 bg-white p-4 shadow-sm'
           >
-            <p className='text-sm text-gray-500'>Avg Response</p>
+            <p className='text-sm text-gray-600'>Avg Response</p>
             <p className='text-2xl font-bold text-purple-600'>
               {stats.avg_response_time_ms ? `${stats.avg_response_time_ms.toFixed(0)}ms` : '-'}
             </p>
@@ -400,7 +400,7 @@ export default function AuditLogsPage() {
             <Icons.loader className='h-8 w-8 animate-spin text-brand-cornflower' />
           </div>
         ) : logs.length === 0 ? (
-          <div className='flex h-64 flex-col items-center justify-center text-gray-500'>
+          <div className='flex h-64 flex-col items-center justify-center text-gray-600'>
             <Icons.fileText className='mb-4 h-12 w-12 text-gray-300' />
             <p>No audit logs found</p>
           </div>
@@ -429,7 +429,7 @@ export default function AuditLogsPage() {
                     onClick={() => setSelectedLog(log)}
                     className='cursor-pointer hover:bg-gray-50 transition-colors'
                   >
-                    <td className='whitespace-nowrap px-3 py-3 text-xs text-gray-500'>
+                    <td className='whitespace-nowrap px-3 py-3 text-xs text-gray-600'>
                       {formatTimestamp(log.timestamp)}
                     </td>
                     <td className='px-3 py-3'>
@@ -437,7 +437,7 @@ export default function AuditLogsPage() {
                         {log.actor_email || 'anonymous'}
                       </div>
                       {log.actor_ip && (
-                        <div className='text-xs text-gray-400'>{log.actor_ip}</div>
+                        <div className='text-xs text-gray-500'>{log.actor_ip}</div>
                       )}
                     </td>
                     <td className='px-3 py-3'>
@@ -491,7 +491,7 @@ export default function AuditLogsPage() {
                         </span>
                       )}
                     </td>
-                    <td className='px-3 py-3 text-xs text-gray-500'>
+                    <td className='px-3 py-3 text-xs text-gray-600'>
                       {log.response_time_ms ? `${log.response_time_ms.toFixed(0)}ms` : '-'}
                     </td>
                     <td className='px-3 py-3'>
@@ -515,7 +515,7 @@ export default function AuditLogsPage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className='flex items-center justify-between border-t border-gray-100 px-4 py-3'>
-            <p className='text-sm text-gray-500'>
+            <p className='text-sm text-gray-600'>
               Showing {(page - 1) * 25 + 1} to {Math.min(page * 25, total)} of {total} entries
             </p>
             <div className='flex items-center gap-2'>
@@ -564,7 +564,7 @@ export default function AuditLogsPage() {
             <div className='flex items-center justify-between border-b border-gray-200 px-6 py-4'>
               <div>
                 <h2 className='text-lg font-semibold text-brand-navy'>Audit Log Details</h2>
-                <p className='text-sm text-gray-500'>ID: {selectedLog.id}</p>
+                <p className='text-sm text-gray-600'>ID: {selectedLog.id}</p>
               </div>
               <Button variant='ghost' size='sm' onClick={() => setSelectedLog(null)}>
                 <Icons.close className='h-5 w-5' />
@@ -608,26 +608,26 @@ export default function AuditLogsPage() {
                   </h3>
                   <dl className='grid grid-cols-2 gap-3 text-sm'>
                     <div>
-                      <dt className='text-gray-500'>Email</dt>
+                      <dt className='text-gray-600'>Email</dt>
                       <dd className='font-medium text-gray-900'>{selectedLog.actor_email || 'Anonymous'}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>User ID</dt>
+                      <dt className='text-gray-600'>User ID</dt>
                       <dd className='font-mono text-xs text-gray-900'>{selectedLog.actor_id || '-'}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>IP Address</dt>
+                      <dt className='text-gray-600'>IP Address</dt>
                       <dd className='font-mono text-gray-900'>{selectedLog.actor_ip || '-'}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>Session ID</dt>
+                      <dt className='text-gray-600'>Session ID</dt>
                       <dd className='font-mono text-xs text-gray-900 truncate' title={selectedLog.session_id || ''}>
                         {selectedLog.session_id || '-'}
                       </dd>
                     </div>
                     {selectedLog.actor_user_agent && (
                       <div className='col-span-2'>
-                        <dt className='text-gray-500'>User Agent</dt>
+                        <dt className='text-gray-600'>User Agent</dt>
                         <dd className='text-xs text-gray-700 break-all'>{selectedLog.actor_user_agent}</dd>
                       </div>
                     )}
@@ -642,30 +642,30 @@ export default function AuditLogsPage() {
                   </h3>
                   <dl className='space-y-3 text-sm'>
                     <div>
-                      <dt className='text-gray-500'>Timestamp</dt>
+                      <dt className='text-gray-600'>Timestamp</dt>
                       <dd className='font-medium text-gray-900'>{formatTimestamp(selectedLog.timestamp)}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>Action</dt>
+                      <dt className='text-gray-600'>Action</dt>
                       <dd className='font-mono text-sm text-gray-900'>{selectedLog.action}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>Endpoint</dt>
+                      <dt className='text-gray-600'>Endpoint</dt>
                       <dd className='font-mono text-sm text-gray-900'>{selectedLog.endpoint || '-'}</dd>
                     </div>
                     {selectedLog.query_params && (
                       <div>
-                        <dt className='text-gray-500'>Query Parameters</dt>
+                        <dt className='text-gray-600'>Query Parameters</dt>
                         <dd className='font-mono text-xs bg-gray-50 p-2 rounded'>{selectedLog.query_params}</dd>
                       </div>
                     )}
                     <div>
-                      <dt className='text-gray-500'>Description</dt>
+                      <dt className='text-gray-600'>Description</dt>
                       <dd className='text-gray-900'>{selectedLog.description}</dd>
                     </div>
                     {selectedLog.request_body && (
                       <div>
-                        <dt className='text-gray-500'>Request Body</dt>
+                        <dt className='text-gray-600'>Request Body</dt>
                         <dd className='font-mono text-xs bg-gray-50 p-2 rounded overflow-x-auto max-h-48 overflow-y-auto'>
                           <pre className='whitespace-pre-wrap'>{selectedLog.request_body}</pre>
                         </dd>
@@ -683,15 +683,15 @@ export default function AuditLogsPage() {
                     </h3>
                     <dl className='grid grid-cols-3 gap-3 text-sm'>
                       <div>
-                        <dt className='text-gray-500'>Type</dt>
+                        <dt className='text-gray-600'>Type</dt>
                         <dd className='font-medium text-gray-900'>{selectedLog.resource_type || '-'}</dd>
                       </div>
                       <div>
-                        <dt className='text-gray-500'>ID</dt>
+                        <dt className='text-gray-600'>ID</dt>
                         <dd className='font-mono text-xs text-gray-900'>{selectedLog.resource_id || '-'}</dd>
                       </div>
                       <div>
-                        <dt className='text-gray-500'>Name</dt>
+                        <dt className='text-gray-600'>Name</dt>
                         <dd className='text-gray-900'>{selectedLog.resource_name || '-'}</dd>
                       </div>
                     </dl>
@@ -706,24 +706,24 @@ export default function AuditLogsPage() {
                   </h3>
                   <dl className='grid grid-cols-3 gap-3 text-sm'>
                     <div>
-                      <dt className='text-gray-500'>Status</dt>
+                      <dt className='text-gray-600'>Status</dt>
                       <dd className={`font-medium ${selectedLog.success === 'true' ? 'text-green-600' : 'text-red-600'}`}>
                         {selectedLog.success === 'true' ? 'Success' : 'Failed'}
                       </dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>Status Code</dt>
+                      <dt className='text-gray-600'>Status Code</dt>
                       <dd className='font-mono text-gray-900'>{selectedLog.response_status || '-'}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-500'>Response Time</dt>
+                      <dt className='text-gray-600'>Response Time</dt>
                       <dd className='font-medium text-gray-900'>
                         {selectedLog.response_time_ms ? `${selectedLog.response_time_ms.toFixed(0)}ms` : '-'}
                       </dd>
                     </div>
                     {selectedLog.error_message && (
                       <div className='col-span-3'>
-                        <dt className='text-gray-500'>Error Message</dt>
+                        <dt className='text-gray-600'>Error Message</dt>
                         <dd className='text-red-600 bg-red-50 p-2 rounded text-sm'>{selectedLog.error_message}</dd>
                       </div>
                     )}
@@ -745,24 +745,24 @@ export default function AuditLogsPage() {
 
                 {/* Technical Details */}
                 <div className='rounded-lg border border-gray-100 bg-gray-50 p-4'>
-                  <h3 className='mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wide'>
+                  <h3 className='mb-3 text-xs font-semibold text-gray-600 uppercase tracking-wide'>
                     Technical Details
                   </h3>
                   <dl className='grid grid-cols-2 gap-2 text-xs'>
                     <div>
-                      <dt className='text-gray-400'>Log ID</dt>
+                      <dt className='text-gray-500'>Log ID</dt>
                       <dd className='font-mono text-gray-600'>{selectedLog.id}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-400'>Request ID</dt>
+                      <dt className='text-gray-500'>Request ID</dt>
                       <dd className='font-mono text-gray-600'>{selectedLog.request_id || '-'}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-400'>Severity</dt>
+                      <dt className='text-gray-500'>Severity</dt>
                       <dd className='text-gray-600'>{selectedLog.severity}</dd>
                     </div>
                     <div>
-                      <dt className='text-gray-400'>Source</dt>
+                      <dt className='text-gray-500'>Source</dt>
                       <dd className='text-gray-600'>{selectedLog.is_middleware ? 'Middleware (Auto)' : 'Custom'}</dd>
                     </div>
                   </dl>

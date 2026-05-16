@@ -41,15 +41,16 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
-interface NavItem { href: string; label: string; icon: React.ElementType }
+interface NavItem { href: string; label: string; icon: React.ElementType; external?: boolean }
 interface NavSection { title: string; items: NavItem[] }
 
 const navSections: NavSection[] = [
   {
     title: 'Main',
     items: [
-      { href: '/',          label: 'Dashboard',    icon: Icons.dashboard },
+      { href: '/command-center', label: 'Dashboard', icon: Icons.dashboard },
       { href: '/workbench', label: 'Workbench',    icon: Icons.workbench },
+      { href: '/',          label: 'Website',      icon: Icons.globe, external: true },
     ],
   },
   {
@@ -63,6 +64,7 @@ const navSections: NavSection[] = [
     title: 'Sales',
     items: [
       { href: '/sales', label: 'Sales Portal', icon: Icons.barChart },
+      { href: '/playbook', label: 'Sales Playbook', icon: Icons.bookmark },
     ],
   },
   {
@@ -79,16 +81,34 @@ function NavLink({
   icon: Icon,
   label,
   isCollapsed,
+  external,
 }: {
   href: string
   icon: React.ElementType
   label: string
   isCollapsed: boolean
+  external?: boolean
 }) {
   const pathname = usePathname()
-  const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href))
+  const isActive = !external && (pathname === href || (href !== '/' && pathname?.startsWith(href)))
 
-  const inner = (
+  const inner = external ? (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'flex items-center gap-3 rounded-lg transition-all duration-150',
+        isCollapsed ? 'h-10 w-10 justify-center' : 'h-10 px-3',
+        'text-brand-navy/70 hover:bg-brand-light hover:text-brand-navy'
+      )}
+    >
+      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+      {!isCollapsed && (
+        <span className="text-sm font-medium">{label}</span>
+      )}
+    </a>
+  ) : (
     <Link
       href={href}
       className={cn(
@@ -96,11 +116,11 @@ function NavLink({
         isCollapsed ? 'h-10 w-10 justify-center' : 'h-10 px-3',
         isActive
           ? 'bg-brand-navy text-white shadow-sm'
-          : 'text-brand-muted hover:bg-brand-light hover:text-brand-navy'
+          : 'text-brand-navy/70 hover:bg-brand-light hover:text-brand-navy'
       )}
     >
       <Icon
-        className={cn('h-[18px] w-[18px] shrink-0', isActive ? 'text-white' : '')}
+        className={cn('h-[18px] w-[18px] shrink-0', isActive ? 'text-white' : 'text-brand-navy/60')}
         strokeWidth={isActive ? 2 : 1.5}
       />
       {!isCollapsed && (
@@ -167,7 +187,7 @@ export function Sidebar() {
           {navSections.map(section => (
             <div key={section.title}>
               {!isCollapsed && (
-                <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-brand-muted/60">
+                <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-brand-navy/40">
                   {section.title}
                 </p>
               )}
@@ -179,6 +199,7 @@ export function Sidebar() {
                     icon={item.icon}
                     label={item.label}
                     isCollapsed={isCollapsed}
+                    external={item.external}
                   />
                 ))}
               </div>

@@ -125,7 +125,7 @@ function ActionDropdown({
   actions.push({ key: 'delete', label: 'Delete User', icon: Icons.trash, color: 'text-red-600', disabled: isSelf, dangerous: true })
 
   if (actions.length === 0) {
-    return <span className='text-sm text-gray-400'>No actions</span>
+    return <span className='text-sm text-gray-500'>No actions</span>
   }
 
   return (
@@ -157,7 +157,7 @@ function ActionDropdown({
               >
                 <Icon className={`h-4 w-4 ${action.disabled ? 'text-gray-300' : action.color}`} />
                 <span>{action.label}</span>
-                {action.disabled && isSelf && <span className='ml-auto text-xs text-gray-400'>(you)</span>}
+                {action.disabled && isSelf && <span className='ml-auto text-xs text-gray-500'>(you)</span>}
               </DropdownMenuItem>
             </div>
           )
@@ -273,11 +273,11 @@ function CreateUserModal({
 
           <div className='rounded-lg border border-gray-200 bg-gray-50 p-4'>
             <div className='mb-3'>
-              <Label className='text-xs font-medium uppercase text-gray-500'>Email</Label>
+              <Label className='text-xs font-medium uppercase text-gray-600'>Email</Label>
               <p className='font-mono text-sm text-gray-900'>{createdUser.email}</p>
             </div>
             <div className='mb-3'>
-              <Label className='text-xs font-medium uppercase text-gray-500'>Password</Label>
+              <Label className='text-xs font-medium uppercase text-gray-600'>Password</Label>
               <p className='font-mono text-sm text-gray-900'>{createdUser.password}</p>
             </div>
             {createdUser.temporaryPassword && (
@@ -358,7 +358,7 @@ function CreateUserModal({
 
           <div className='space-y-1.5'>
             <Label htmlFor='password'>
-              Password <span className='text-gray-400 font-normal'>(optional)</span>
+              Password <span className='text-gray-500 font-normal'>(optional)</span>
             </Label>
             <Input
               id='password'
@@ -368,7 +368,7 @@ function CreateUserModal({
               className='font-mono'
               placeholder='Leave empty to auto-generate strong password'
             />
-            <p className='text-xs text-gray-400'>
+            <p className='text-xs text-gray-500'>
               If provided: min 12 chars, uppercase, lowercase, number, special char
             </p>
           </div>
@@ -1129,7 +1129,7 @@ export default function AdminUsersPage() {
         <CardHeader className='relative z-10'>
           <CardTitle className='text-lg font-semibold text-brand-navy'>
             {filter === 'all' ? 'All Users' : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Users`}
-            <span className='ml-2 text-sm font-normal text-gray-500'>
+            <span className='ml-2 text-sm font-normal text-gray-600'>
               {debouncedSearch
                 ? `(${filteredUsers.length} of ${totalUsers} matching "${debouncedSearch}")`
                 : `(${filteredUsers.length} on this page · ${totalUsers} total)`
@@ -1152,19 +1152,19 @@ export default function AdminUsersPage() {
               <table className='w-full'>
                 <thead className='border-b bg-gray-50/50'>
                   <tr>
-                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600'>
                       User
                     </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600'>
                       Status
                     </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600'>
                       Email Verified
                     </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600'>
                       Registered
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    <th className='px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-600'>
                       Actions
                     </th>
                   </tr>
@@ -1204,7 +1204,7 @@ export default function AdminUsersPage() {
                               Verified
                             </span>
                           ) : (
-                            <span className='inline-flex items-center text-sm text-gray-500'>
+                            <span className='inline-flex items-center text-sm text-gray-600'>
                               <Icons.alertCircle className='mr-1 h-4 w-4' />
                               Pending
                             </span>
@@ -1355,7 +1355,7 @@ export default function AdminUsersPage() {
                   <Icons.zap className='h-4 w-4' />
                 </Button>
               </div>
-              <p className='text-xs text-gray-500'>
+              <p className='text-xs text-gray-600'>
                 Password must be at least 12 characters long.
               </p>
             </div>
@@ -1452,7 +1452,7 @@ export default function AdminUsersPage() {
                   ))}
                 </div>
               ) : (
-                <p className='text-sm text-gray-500'>No roles assigned</p>
+                <p className='text-sm text-gray-600'>No roles assigned</p>
               )}
             </div>
 
@@ -1475,7 +1475,7 @@ export default function AdminUsersPage() {
                           <div className='flex items-center gap-2'>
                             <span>{role.name}</span>
                             {role.description && (
-                              <span className='text-xs text-gray-400'>- {role.description}</span>
+                              <span className='text-xs text-gray-500'>- {role.description}</span>
                             )}
                           </div>
                         </SelectItem>

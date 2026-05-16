@@ -106,7 +106,7 @@ export default function EventsPage() {
   }
 
   const getEventColor = (type: string | null) => {
-    if (!type) return 'text-gray-500'
+    if (!type) return 'text-gray-600'
     if (type.includes('ERROR')) return 'text-red-600'
     if (type === 'LOGIN') return 'text-emerald-600'
     if (type === 'LOGOUT') return 'text-amber-600'
@@ -126,7 +126,7 @@ export default function EventsPage() {
   if (status === 'loading' || (isLoading && events.length === 0)) {
     return (
       <div className='flex min-h-[400px] items-center justify-center'>
-        <Icons.loader className='h-8 w-8 animate-spin text-gray-400' />
+        <Icons.loader className='h-8 w-8 animate-spin text-gray-500' />
       </div>
     )
   }
@@ -134,7 +134,7 @@ export default function EventsPage() {
   return (
     <div className='space-y-6'>
       {/* Breadcrumb */}
-      <div className='flex items-center gap-2 text-sm text-gray-500'>
+      <div className='flex items-center gap-2 text-sm text-gray-600'>
         <Icons.home className='h-4 w-4' />
         <span>/</span>
         <span>Admin</span>
@@ -146,7 +146,7 @@ export default function EventsPage() {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-2xl font-semibold text-gray-900'>Login Events</h1>
-          <p className='text-gray-500 mt-1'>
+          <p className='text-gray-600 mt-1'>
             Security monitoring and login activity
           </p>
         </div>
@@ -172,7 +172,7 @@ export default function EventsPage() {
           <Card className='relative overflow-hidden'>
             <CardWatermark />
             <CardHeader className='pb-2'>
-              <CardTitle className='text-sm font-medium text-gray-500'>
+              <CardTitle className='text-sm font-medium text-gray-600'>
                 Successful Logins (7d)
               </CardTitle>
             </CardHeader>
@@ -185,7 +185,7 @@ export default function EventsPage() {
           <Card className='relative overflow-hidden border-red-100'>
             <CardWatermark />
             <CardHeader className='pb-2'>
-              <CardTitle className='text-sm font-medium text-gray-500'>
+              <CardTitle className='text-sm font-medium text-gray-600'>
                 Failed Logins (7d)
               </CardTitle>
             </CardHeader>
@@ -198,7 +198,7 @@ export default function EventsPage() {
           <Card className='relative overflow-hidden'>
             <CardWatermark />
             <CardHeader className='pb-2'>
-              <CardTitle className='text-sm font-medium text-gray-500'>
+              <CardTitle className='text-sm font-medium text-gray-600'>
                 Unique Users
               </CardTitle>
             </CardHeader>
@@ -209,7 +209,7 @@ export default function EventsPage() {
           <Card className='relative overflow-hidden'>
             <CardWatermark />
             <CardHeader className='pb-2'>
-              <CardTitle className='text-sm font-medium text-gray-500'>
+              <CardTitle className='text-sm font-medium text-gray-600'>
                 Unique IPs
               </CardTitle>
             </CardHeader>
@@ -264,7 +264,7 @@ export default function EventsPage() {
           </Select>
         </div>
         {isLoading && (
-          <Icons.loader className='h-4 w-4 animate-spin text-gray-400' />
+          <Icons.loader className='h-4 w-4 animate-spin text-gray-500' />
         )}
       </div>
 
@@ -278,7 +278,7 @@ export default function EventsPage() {
         </CardHeader>
         <CardContent>
           {events.length === 0 ? (
-            <div className='flex flex-col items-center justify-center py-12 text-gray-500'>
+            <div className='flex flex-col items-center justify-center py-12 text-gray-600'>
               <Icons.activity className='h-12 w-12 mb-4 text-gray-300' />
               <p>No events found</p>
               <p className='text-sm'>Events will appear when users interact with the system</p>
@@ -310,7 +310,7 @@ export default function EventsPage() {
                             </span>
                           )}
                         </div>
-                        <div className='flex items-center gap-4 mt-1 text-sm text-gray-500'>
+                        <div className='flex items-center gap-4 mt-1 text-sm text-gray-600'>
                           {event.ipAddress && (
                             <span className='inline-flex items-center gap-1'>
                               <Icons.globe className='h-3 w-3' />
@@ -330,7 +330,7 @@ export default function EventsPage() {
                           )}
                         </div>
                       </div>
-                      <div className='text-sm text-gray-400 whitespace-nowrap'>
+                      <div className='text-sm text-gray-500 whitespace-nowrap'>
                         {formatTime(event.time)}
                       </div>
                     </motion.div>

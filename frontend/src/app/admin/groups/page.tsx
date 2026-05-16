@@ -162,7 +162,7 @@ export default function GroupsPage() {
   if (status === 'loading' || isLoading) {
     return (
       <div className='flex min-h-[400px] items-center justify-center'>
-        <Icons.loader className='h-8 w-8 animate-spin text-gray-400' />
+        <Icons.loader className='h-8 w-8 animate-spin text-gray-500' />
       </div>
     )
   }
@@ -170,7 +170,7 @@ export default function GroupsPage() {
   return (
     <div className='space-y-6'>
       {/* Breadcrumb */}
-      <div className='flex items-center gap-2 text-sm text-gray-500'>
+      <div className='flex items-center gap-2 text-sm text-gray-600'>
         <Icons.home className='h-4 w-4' />
         <span>/</span>
         <span>Admin</span>
@@ -182,7 +182,7 @@ export default function GroupsPage() {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-2xl font-semibold text-gray-900'>Group Management</h1>
-          <p className='text-gray-500 mt-1'>
+          <p className='text-gray-600 mt-1'>
             Manage groups and their members
           </p>
         </div>
@@ -207,7 +207,7 @@ export default function GroupsPage() {
         <Card className='relative overflow-hidden'>
           <CardWatermark />
           <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-500'>Total Groups</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>Total Groups</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold'>{flatGroups.length}</div>
@@ -216,7 +216,7 @@ export default function GroupsPage() {
         <Card className='relative overflow-hidden'>
           <CardWatermark />
           <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-500'>Total Members</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>Total Members</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold'>{totalMembers}</div>
@@ -225,7 +225,7 @@ export default function GroupsPage() {
         <Card className='relative overflow-hidden'>
           <CardWatermark />
           <CardHeader className='pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-500'>Groups with Roles</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>Groups with Roles</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold'>
@@ -245,7 +245,7 @@ export default function GroupsPage() {
         </CardHeader>
         <CardContent>
           {flatGroups.length === 0 ? (
-            <div className='flex flex-col items-center justify-center py-12 text-gray-500'>
+            <div className='flex flex-col items-center justify-center py-12 text-gray-600'>
               <Icons.network className='h-12 w-12 mb-4 text-gray-300' />
               <p>No groups found</p>
               <p className='text-sm'>Create a group to organize users</p>
@@ -254,7 +254,7 @@ export default function GroupsPage() {
             <div className='overflow-x-auto'>
               <table className='w-full'>
                 <thead>
-                  <tr className='border-b text-left text-sm text-gray-500'>
+                  <tr className='border-b text-left text-sm text-gray-600'>
                     <th className='pb-3 font-medium'>Group Name</th>
                     <th className='pb-3 font-medium'>Path</th>
                     <th className='pb-3 font-medium'>Members</th>
@@ -278,13 +278,13 @@ export default function GroupsPage() {
                             style={{ paddingLeft: `${depth * 24}px` }}
                           >
                             {depth > 0 && (
-                              <Icons.arrowRight className='h-3 w-3 text-gray-400' />
+                              <Icons.arrowRight className='h-3 w-3 text-gray-500' />
                             )}
                             <Icons.network className='h-4 w-4 text-blue-600' />
                             <span className='font-medium'>{group.name}</span>
                           </div>
                         </td>
-                        <td className='py-4 text-sm text-gray-500'>
+                        <td className='py-4 text-sm text-gray-600'>
                           {group.path || '/'}
                         </td>
                         <td className='py-4'>
@@ -305,7 +305,7 @@ export default function GroupsPage() {
                                 </span>
                               ))
                             ) : (
-                              <span className='text-sm text-gray-400'>—</span>
+                              <span className='text-sm text-gray-500'>—</span>
                             )}
                           </div>
                         </td>
