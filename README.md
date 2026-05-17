@@ -1,454 +1,248 @@
-# 🚀 SecurePulse Insurance - AI-Powered Sales Automation Platform
+# ⚡ SuperAgent — AI Sales Autopilot
 
-An intelligent, multi-agent sales automation system that streamlines insurance lead intake, qualification, and routing with AI-powered chatbots and human-in-command oversight.
-
----
-
-## 🎯 Overview
-
-SecurePulse Insurance is a full-stack application that automates the insurance sales pipeline:
-
-- **AI Chatbot**: Gemini-powered conversational agent for lead collection
-- **Lead Intake**: Multi-channel lead capture (web form, chat, audio)
-- **Policy Engine**: Automated lead qualification and validation
-- **Smart Routing**: Intelligent assignment to sales representatives
-- **Sales Dashboard**: Rep portal with lead management and call processing
-- **Human-in-Command**: Supervity AI integration for exception handling
-- **Sales Playbook**: Vector-based knowledge management with Qdrant
+An end-to-end AI-powered insurance sales platform built on FastAPI, Next.js, and PostgreSQL.  
+Leads come in through a web form or an AI chat agent, get routed to the right sales rep automatically, and reps close deals by uploading call transcripts — which trigger a full downstream automation pipeline (HubSpot → Slack → Email) via Supervity workflows.
 
 ---
 
-## 📋 Prerequisites
+## What This Does
 
-| Tool | Installation | Purpose |
-|------|-------------|---------|
-| **Python 3.11+** | [Download](https://www.python.org/downloads/) | Backend runtime |
-| **Node.js 18+** | [Download](https://nodejs.org/) | Frontend runtime |
-| **PostgreSQL** | [Download](https://www.postgresql.org/download/) or use Aiven | Database |
-| **Docker** (optional) | [Download](https://www.docker.com/products/docker-desktop/) | Containerized deployment |
+```
+Client visits /          →  fills form  OR  chats with AI agent
+                                  ↓
+              Lead created in DB, routed to matching sales rep
+                                  ↓
+Rep visits /sales        →  sees their assigned leads
+                                  ↓
+Rep clicks "Open & Process Call"  →  uploads audio or types transcript
+                                  ↓
+Groq Whisper transcribes audio    →  Supervity orchestrator runs:
+                                       ⚙️  Serialize → 🔗 HubSpot → 💬 Slack → 📧 Email
+                                  ↓
+Lead marked "closed"  →  appears in Completed Deals
+```
 
 ---
 
-## 🚀 Quick Start
+## Prerequisites
 
-### 1. Clone the Repository
+| Tool | Download | Why |
+|------|----------|-----|
+| **Docker Desktop** | [docker.com](https://www.docker.com/products/docker-desktop/) | Runs all services |
+| **Git** | [git-scm.com](https://git-scm.com/) | Clone the repo |
+
+> **Windows users:** Make sure WSL 2 is enabled. If you see a WSL error, run `wsl --install` in PowerShell as Administrator and restart.
+
+---
+
+## Quick Start
+
+### 1. Clone
 
 ```bash
-git clone https://github.com/saishmungase/Autopilot-Agent.git
+git clone <your-repo-url>
 cd Autopilot-Agent
 ```
 
-### 2. Set Up Environment Variables
+### 2. Configure environment
 
 ```bash
+# macOS / Linux
 cp .env.example .env
+
+# Windows PowerShell
+Copy-Item .env.example .env
 ```
 
-Edit `.env` and configure:
+Open `.env` and fill in the required keys:
 
 ```env
-# Database (Aiven PostgreSQL)
+# Database (Aiven PostgreSQL or local)
 DATABASE_URL=postgresql://user:password@host:port/dbname?sslmode=require
 
-# API Keys
-GEMINI_API_KEY=your_gemini_api_key
-GROQ_API_KEY=your_groq_api_key
+# Security
+SECRET_KEY=your-secret-key-here
 
-# Qdrant Vector Database
-QDRANT_URL=your_qdrant_cloud_url
-QDRANT_API_KEY=your_qdrant_api_key
+# Groq — audio transcription (whisper-large-v3)
+# Get free key at: https://console.groq.com
+GROQ_API_KEY=gsk_...
 
-# Supervity AI (optional)
-SUPERVITY_API_URL=https://auto-workflow-api.supervity.ai
-SUPERVITY_TOKEN=your_supervity_token
+# Gemini — AI chat agent (gemini-2.0-flash)
+# Get free key at: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=AIza...
+
+# Supervity — downstream automation workflows
+SUPER_API=your-supervity-api-key
+
+# Internal service URL (used by chat agent inside Docker)
+INTERNAL_API_URL=http://backend:8000
 ```
 
-### 3. Install Backend Dependencies
+### 3. Start everything
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run database migrations
-alembic upgrade head
+docker compose up --build
 ```
 
-### 4. Install Frontend Dependencies
+First run takes 3–5 minutes (downloads images, installs packages). Subsequent runs use cache and start in ~15 seconds.
 
-```bash
-cd frontend
-npm install
-cd ..
-```
-
-### 5. Start the Application
-
-**Backend:**
-```bash
-uvicorn app.main:app --reload --port 8001
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-**UI (TanStack Router):**
-```bash
-cd ui
-npm run dev
-```
-
-### 6. Access the Application
+### 4. Open the app
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| 🏠 **Main Website** | [http://localhost:3000](http://localhost:3000) | Public-facing site with intake form |
-| 📊 **Sales Dashboard** | [http://localhost:3001/sales](http://localhost:3001/sales) | Sales rep portal |
-| 📚 **Sales Playbook** | [http://localhost:3001/playbook](http://localhost:3001/playbook) | Knowledge base management |
-| 🔧 **Workbench** | [http://localhost:3001/workbench](http://localhost:3001/workbench) | Human-in-command interface |
-| 📖 **API Docs** | [http://localhost:8001/api/docs](http://localhost:8001/api/docs) | Swagger documentation |
+| 🏠 **Client Page** | [http://localhost:3001](http://localhost:3001) | Public landing — form + AI chat |
+| 💼 **Sales Portal** | [http://localhost:3001/sales](http://localhost:3001/sales) | Rep login + lead dashboard |
+| 📖 **API Docs** | [http://localhost:8001/api/docs](http://localhost:8001/api/docs) | Swagger UI |
 
 ---
 
-## 🏗️ Architecture
+## Features
 
-### System Flow
+### Client Page (`/`)
+- Company info with phone, email, and hours
+- **"Request a Free Quote"** button → opens a modal form → submits lead to DB → auto-routes to a rep
+- **AI Chat Assistant** (right panel) — powered by Gemini 2.0 Flash via a ReAct agent loop:
+  - Greets the user, collects name / email / phone / policy type through natural conversation
+  - Once all info is gathered, calls the intake API to create and assign the lead
+  - Fully stateful per session
 
-```
-┌─────────────┐
-│   Website   │ → Lead Form / Chatbot
-└──────┬──────┘
-       │
-       ↓
-┌─────────────┐
-│   Backend   │ → Policy Engine → Database
-│   FastAPI   │ → Lead Routing → Sales Reps
-└──────┬──────┘
-       │
-       ↓
-┌─────────────┐
-│   Sales     │ → Process Calls
-│  Dashboard  │ → Manage Leads
-└─────────────┘
-```
+### Sales Portal (`/sales`)
+- **Auth gate** — sign in or register; JWT stored in `localStorage`; auto-redirects to dashboard on return visits
+- **Dashboard** shows only the leads assigned to the logged-in rep (by `rep_id` decoded from JWT)
+- **Newly Assigned** — leads waiting to be called
+- **Completed Deals** — leads closed after transcript upload
+- **"Open & Process Call"** button on each lead card:
+  - **Manual transcript** — type or paste the call notes
+  - **Audio upload** — upload any audio file (MP3, M4A, WAV); auto-compressed with pydub + ffmpeg before sending to Groq Whisper
+  - After transcript is saved → lead status set to `"closed"` → Supervity orchestrator runs HubSpot, Slack, and Email workflows in sequence via WebSocket real-time updates
 
-### Key Components
-
-#### 1. **AI Chatbot** (`/app/services/chat_agent.py`)
-- **Model**: Gemini 1.5 Flash
-- **Pattern**: ReAct (Reasoning + Acting) agent
-- **Tools**: 
-  - `ask_user` - Conversational interaction
-  - `collect_info` - Data extraction
-  - `submit_lead` - Lead submission
-- **Features**: Natural language lead collection, automatic field extraction
-
-#### 2. **Lead Intake** (`/app/routers/intake.py`)
-- Multi-channel support (form, chat, audio)
-- Policy-based validation
-- Automatic lead scoring
-- Database persistence
-
-#### 3. **Policy Engine** (`/app/policy_engine.py`)
-- **POLICY-1**: Contact completeness validation
-- **POLICY-2**: Duplicate lead detection
-- **POLICY-3**: Minimum lead score threshold
-- Routes violations to workbench for human review
-
-#### 4. **Smart Routing** (`/app/services/router_operator.py`)
-- Policy-type based assignment
-- Rep availability checking
-- Load balancing
-
-#### 5. **Sales Dashboard** (`/frontend/src/app/sales/page.tsx`)
-- Lead management interface
-- Process call modal with audio upload
-- Real-time lead updates
-- Rep authentication
-
-#### 6. **Sales Playbook** (`/app/routers/playbook.py`)
-- Document upload (PDF, DOCX, TXT, MD)
-- Vector embeddings with Gemini
-- Semantic search with Qdrant
-- Knowledge base for AI agents
+### Backend
+- **ReAct AI agent** (`/api/chat/message`) — stateless REST endpoint, session managed server-side
+- **Lead intake** (`/api/intake/process-lead`) — creates lead, routes to matching rep by team/policy type
+- **Transcript endpoint** (`/api/reps/transcript`) — accepts audio file OR manual text, closes the lead
+- **Orchestrator** — async background worker; runs Supervity workflows after transcript is saved; marks lead closed in DB when all agents finish
+- **Rep auth** — bcrypt passwords, JWT with embedded `rep_id` so the frontend never needs to hardcode IDs
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Autopilot-Agent/
-├── app/                          # Backend (FastAPI)
-│   ├── main.py                   # Application entry point
-│   ├── routers/                  # API endpoints
-│   │   ├── intake.py             # Lead intake
-│   │   ├── chat.py               # AI chatbot
-│   │   ├── sales_agent.py        # Sales rep management
-│   │   ├── playbook.py           # Knowledge base
-│   │   └── workbench.py          # Human-in-command
-│   ├── services/                 # Business logic
-│   │   ├── chat_agent.py         # ReAct agent
-│   │   ├── router_operator.py   # Lead routing
-│   │   └── groq_services.py     # Audio transcription
-│   ├── models/                   # Database models
-│   ├── schemas/                  # Pydantic schemas
-│   ├── core/                     # Core utilities
-│   │   ├── database.py           # DB connection
-│   │   ├── security.py           # Authentication
-│   │   └── storage.py            # File storage
-│   └── orchestrator/             # Lead orchestration
-│       └── manager.py            # Async lead processing
-├── frontend/                     # Next.js Dashboard
-│   └── src/
-│       ├── app/                  # Pages
-│       │   ├── sales/            # Sales portal
-│       │   ├── playbook/         # Knowledge base
-│       │   ├── workbench/        # Human oversight
-│       │   └── command-center/   # Analytics
-│       └── components/           # UI components
-├── ui/                           # TanStack Router Website
-│   └── src/
-│       ├── routes/               # Pages
-│       └── components/           # UI components
-├── alembic/                      # Database migrations
-├── docs/                         # Documentation
-└── .env                          # Environment configuration
+├── app/                        # Backend (FastAPI)
+│   ├── main.py                 # App entry point + /api/process-call + WebSocket
+│   ├── core/
+│   │   ├── database.py         # SQLAlchemy engine + session
+│   │   └── security.py         # bcrypt + JWT (with rep_id embedded)
+│   ├── models/
+│   │   ├── lead.py             # intake_leads table (UUID PK)
+│   │   ├── rep.py              # reps table
+│   │   └── sales_agent.py      # sales_agents + clients tables
+│   ├── routers/
+│   │   ├── reps.py             # auth, signin, /me, fetch, transcript
+│   │   ├── intake.py           # process-lead
+│   │   └── chat.py             # AI chat agent endpoints
+│   ├── services/
+│   │   ├── chat_agent.py       # ReAct agent (Gemini 2.0 Flash)
+│   │   ├── groq_services.py    # Audio compression + Whisper transcription
+│   │   └── router_operator.py  # Lead → Rep routing logic
+│   └── orchestrator/
+│       └── manager.py          # Supervity workflow runner + DB close-lead
+├── frontend/                   # Frontend (Next.js 15)
+│   └── src/app/
+│       ├── page.tsx            # Client landing page (form + chatbot)
+│       └── sales/page.tsx      # Sales portal (auth + dashboard)
+├── alembic/versions/           # DB migrations
+├── packages/requirements.txt   # Python dependencies
+├── docker-compose.yml
+├── Dockerfile
+└── .env.example
 ```
 
 ---
 
-## 🔑 Key Features
+## API Reference
 
-### 1. Multi-Channel Lead Intake
-- **Web Form**: Direct lead submission from website
-- **AI Chatbot**: Conversational lead collection
-- **Audio Processing**: Call transcription with Groq Whisper
-
-### 2. Intelligent Lead Qualification
-- Automated policy checks
-- Lead scoring algorithm
-- Duplicate detection
-- Contact validation
-
-### 3. Smart Lead Routing
-- Policy-type based assignment
-- Rep specialization matching
-- Automatic load balancing
-
-### 4. Sales Rep Portal
-- Lead dashboard with filters
-- Process call interface
-- Audio upload and transcription
-- Lead status management
-
-### 5. Vector-Powered Knowledge Base
-- Document upload and parsing
-- Semantic search
-- AI-accessible playbook
-- Qdrant vector storage
-
-### 6. Human-in-Command
-- Exception handling workflow
-- Supervity AI integration
-- Review and approval interface
-- Audit trail
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/reps/auth` | Register a new rep |
+| `POST` | `/api/reps/signin` | Login → returns JWT with `rep_id` |
+| `GET`  | `/api/reps/me?token=...` | Get rep profile from JWT |
+| `GET`  | `/api/reps/fetch?rep_id=N` | Get assigned + completed leads for a rep |
+| `POST` | `/api/reps/transcript` | Save transcript (audio or text), close lead |
+| `POST` | `/api/intake/process-lead` | Create lead + auto-route to rep |
+| `POST` | `/api/chat/message` | Send message to AI chat agent |
+| `POST` | `/api/chat/reset` | Reset a chat session |
+| `POST` | `/api/process-call` | Upload audio → transcribe → run Supervity pipeline |
+| `WS`   | `/ws/{lead_id}` | Real-time agent progress updates |
+| `GET`  | `/api/health` | Liveness probe |
 
 ---
 
-## 🛠️ API Endpoints
+## Key Environment Variables
 
-### Lead Management
-```
-POST   /api/intake/process-lead    # Submit new lead
-GET    /api/reps/fetch              # Get rep's leads
-POST   /api/process-call            # Process audio call
-```
-
-### Chat & AI
-```
-POST   /api/chat/message            # Send chat message
-POST   /api/chat/reset              # Reset chat session
-```
-
-### Sales Playbook
-```
-POST   /api/playbook/upload         # Upload document
-GET    /api/playbook/documents      # List documents
-GET    /api/playbook/search         # Semantic search
-DELETE /api/playbook/documents/:id  # Delete document
-```
-
-### Authentication
-```
-POST   /api/reps/auth               # Register rep
-POST   /api/reps/signin             # Sign in
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `SECRET_KEY` | ✅ | JWT signing secret |
+| `GROQ_API_KEY` | ✅ | Groq Whisper transcription |
+| `GEMINI_API_KEY` | ✅ | Gemini 2.0 Flash for AI chat |
+| `SUPER_API` | ✅ | Supervity workflow automation |
+| `INTERNAL_API_URL` | ✅ | `http://backend:8000` inside Docker |
+| `AUTH_BYPASS` | optional | `true` = skip Keycloak auth (dev mode) |
 
 ---
 
-## 🧪 Testing
-
-### Backend Tests
-```bash
-pytest
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
-### API Testing
-Use the Swagger UI at `http://localhost:8001/api/docs`
-
----
-
-## 🚢 Deployment
-
-### Docker Deployment
+## Common Commands
 
 ```bash
-# Build and start all services
-docker-compose up --build -d
+# Start everything
+docker compose up --build
 
-# View logs
-docker-compose logs -f
+# Start without rebuilding
+docker compose up
 
-# Stop services
-docker-compose down
-```
+# Stop
+docker compose down
 
-### Production Deployment
+# View backend logs live
+docker compose logs -f backend
 
-1. **Backend**: Deploy to Railway, Render, or AWS
-2. **Frontend**: Deploy to Vercel or Netlify
-3. **Database**: Use Aiven PostgreSQL (already configured)
-4. **Vector DB**: Use Qdrant Cloud (already configured)
+# View frontend logs live
+docker compose logs -f frontend
 
----
+# Run a DB migration
+docker compose exec backend alembic upgrade head
 
-## 🔧 Configuration
-
-### Environment Variables
-
-#### Required
-- `DATABASE_URL` - PostgreSQL connection string
-- `GEMINI_API_KEY` - Google Gemini API key
-- `QDRANT_URL` - Qdrant cloud URL
-- `QDRANT_API_KEY` - Qdrant API key
-
-#### Optional
-- `GROQ_API_KEY` - For audio transcription
-- `SUPERVITY_TOKEN` - For human-in-command
-- `SECRET_KEY` - JWT secret (auto-generated if not set)
-
----
-
-## 📊 Database Schema
-
-### Core Tables
-- `leads` - Lead information and status
-- `reps` - Sales representatives
-- `sales_agents` - Agent configurations
-- `audit_logs` - System audit trail
-- `settings` - Application settings
-
-### Migrations
-```bash
-# Create new migration
-alembic revision --autogenerate -m "description"
-
-# Apply migrations
-alembic upgrade head
-
-# Rollback
-alembic downgrade -1
+# Create a new migration
+docker compose exec backend alembic revision --autogenerate -m "description"
 ```
 
 ---
 
-## 🤖 AI Models Used
+## Troubleshooting
 
-| Model | Purpose | Provider |
-|-------|---------|----------|
-| **Gemini 1.5 Flash** | Chatbot conversations | Google |
-| **Gemini Embedding 004** | Document embeddings | Google |
-| **Groq Whisper** | Audio transcription | Groq |
-
----
-
-## 🔐 Security
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- SQL injection protection (SQLAlchemy ORM)
-- CORS configuration
-- Environment variable protection
-- Audit logging for all operations
+| Problem | Solution |
+|---------|----------|
+| `GEMINI_API_KEY` error on startup | Add your key to `.env` — get one free at [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| Frontend shows "site can't be reached" on `:3000` | Use **`:3001`** — Docker maps `3001 → 3000` internally |
+| Lead not moving to Completed | Make sure you click "Open & Process Call" and submit a transcript — the chat agent only creates leads, it doesn't close them |
+| Audio upload fails with 413 | File is too large even after compression — try a shorter recording |
+| `bcrypt` error | Rebuild with `--no-cache`: `docker compose build --no-cache` |
+| Port already in use | `docker compose down` then `docker compose up --build` |
+| DB migration fails | Check `docker compose logs backend` — usually a stale `leads` table conflict |
 
 ---
 
-## 🐛 Troubleshooting
+## Tech Stack
 
-### Common Issues
-
-**Chatbot not responding:**
-- Check `GEMINI_API_KEY` is set correctly
-- Verify backend is running on port 8001
-- Check browser console for errors
-
-**Database connection failed:**
-- Verify `DATABASE_URL` is correct
-- Check PostgreSQL is running
-- Ensure SSL mode is set correctly
-
-**Form submission fails:**
-- Check backend API is accessible
-- Verify CORS settings
-- Check browser network tab for errors
-
-**Playbook search not working:**
-- Verify Qdrant credentials
-- Check collection exists
-- Ensure documents are uploaded
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👥 Contributors
-
-- Madhav Chaturvedi
-- Saish Mungase
-
----
-
-## 🙏 Acknowledgments
-
-- Google Gemini for AI capabilities
-- Qdrant for vector search
-- Supervity for human-in-command platform
-- Aiven for managed PostgreSQL
-
----
-
-## 📞 Support
-
-For issues and questions:
-- Create an issue on GitHub
-- Contact: madhavchaturvedi005@gmail.com
-
----
-
-**Built with ❤️ for the AutoPilot Hackathon**
+| Layer | Technology |
+|-------|------------|
+| Backend | Python 3.11 + FastAPI + Gunicorn |
+| Frontend | Next.js 15 + React 19 + Tailwind CSS + Framer Motion |
+| Database | PostgreSQL 15 + SQLAlchemy + Alembic |
+| AI Chat | Gemini 2.0 Flash (via OpenAI-compat endpoint) |
+| Transcription | Groq Whisper Large v3 + pydub + ffmpeg |
+| Automation | Supervity workflow orchestration (HubSpot, Slack, Email) |
+| Auth | bcrypt + JWT (rep_id embedded) |
+| Containers | Docker + Docker Compose |
