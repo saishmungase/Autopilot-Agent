@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { apiClient } from '@/lib/api-client'
 import { useAI } from '@/context/AIContext'
 import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
@@ -63,7 +62,6 @@ export function AIManager() {
     clearHistory,
     isTyping,
     setIsTyping,
-    currentPageContext,
   } = useAI()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -105,56 +103,66 @@ export function AIManager() {
 
   // Handle sending a message
   const handleSendMessage = useCallback(async (content: string) => {
-    // Add user message
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+
+    // Add user message immediately
     addMessage({ role: 'user', content })
 
-    // Add loading message
+    // Show loading indicator
     addMessage({ role: 'assistant', content: '', isLoading: true })
     setIsTyping(true)
 
     try {
-      // Call backend API using apiClient
-      interface ToolCallResponse {
-        id: string
-        name: string
-        args: Record<string, unknown>
-        result?: unknown
-      }
-      const data = await apiClient.post<{ response: string; tool_calls?: ToolCallResponse[] }>('/api/ai/chat', {
-        message: content,
-        history: chatHistory.filter(m => !m.isLoading).map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-        context: { page: currentPageContext },
+      // Build full conversation history for context (exclude loading placeholders)
+      const history = chatHistory
+        .filter(m => !m.isLoading)
+        .map(m => ({ role: m.role, content: m.content }))
+
+      // Include the new user message
+      const messages = [...history, { role: 'user', content }]
+
+      const res = await fetch(`${API_URL}/api/ai-manager/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages }),
       })
 
-      // Remove loading message and add real response
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data: { reply: string; tool_calls_made: string[]; rag_chunks_used: number } = await res.json()
+
+      // Map tool_calls_made to the toolCalls shape the UI expects
+      const toolCalls = (data.tool_calls_made || []).map((name, i) => ({
+        id: `tc-${i}`,
+        name,
+        args: {},
+      }))
+
       addMessage({
         role: 'assistant',
-        content: data.response || 'I apologize, but I encountered an issue processing your request.',
-        toolCalls: data.tool_calls,
+        content: data.reply || 'I could not generate a response. Please try again.',
+        toolCalls: toolCalls.length ? toolCalls : undefined,
       })
     } catch {
       addMessage({
         role: 'assistant',
-        content: 'I apologize, but I encountered an error. Please try again.',
+        content: '⚠️ Could not reach the AI Manager. Please check your backend connection and try again.',
       })
     } finally {
       setIsTyping(false)
     }
-  }, [addMessage, chatHistory, currentPageContext, setIsTyping])
+  }, [addMessage, chatHistory, setIsTyping])
 
   // Handle quick action click
   const handleQuickAction = (action: string) => {
     handleSendMessage(action)
   }
 
-  // Get page name from context
+  // Get page name from current URL
   const getPageName = () => {
-    if (currentPageContext === '/') return 'Dashboard'
-    const segments = currentPageContext.split('/').filter(Boolean)
-    return segments.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' > ')
+    const p = typeof window !== 'undefined' ? window.location.pathname : '/'
+    if (p === '/') return 'Dashboard'
+    return p.split('/').filter(Boolean).map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' > ')
   }
 
   // Handle backdrop click

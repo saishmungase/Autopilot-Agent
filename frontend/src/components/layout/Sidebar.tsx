@@ -48,9 +48,10 @@ const navSections: NavSection[] = [
   {
     title: 'Main',
     items: [
-      { href: '/command-center', label: 'Dashboard', icon: Icons.dashboard },
-      { href: '/workbench', label: 'Workbench',    icon: Icons.workbench },
-      { href: '/',          label: 'Website',      icon: Icons.globe, external: true },
+      { href: '/command-center',  label: 'Dashboard',    icon: Icons.dashboard },
+      { href: '/workbench',       label: 'Workbench',    icon: Icons.workbench },
+      { href: '/process-call',    label: 'Process Call', icon: Icons.phone },
+      { href: '/',                label: 'Website',      icon: Icons.globe, external: true },
     ],
   },
   {

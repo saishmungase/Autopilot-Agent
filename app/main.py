@@ -22,6 +22,7 @@ from app.routers.analytics import router as analytics_router
 from app.routers.workbench import router as workbench_router
 from app.routers.playbook import router as playbook_router
 from app.routers.supervity import router as supervity_router
+from app.routers.ai_manager import router as ai_manager_router
 
 # Import your orchestrator (using the correct path we fixed earlier)
 from app.orchestrator.manager import Orchestrator
@@ -72,6 +73,7 @@ app.include_router(analytics_router, prefix="/api")
 app.include_router(workbench_router, prefix="/api")
 app.include_router(playbook_router, prefix="/api")
 app.include_router(supervity_router, prefix="/api")
+app.include_router(ai_manager_router)
 
 
 @app.on_event("startup")

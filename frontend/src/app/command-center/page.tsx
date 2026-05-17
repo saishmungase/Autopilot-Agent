@@ -141,26 +141,20 @@ function timeAgo(dateString: string): string {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
 }
 
-function policyColor(type: string): string {
-  const map: Record<string, string> = {
-    life: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    health: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    car: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    home: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  }
-  return map[type] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+function policyColor(_type: string): string {
+  return 'bg-[#F0F2FF] text-[#3D4B8F] border-[#E2E6F8]'
 }
 
 function statusColor(status: string): string {
   const map: Record<string, string> = {
-    new: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    assigned: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    in_progress: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    proposal_sent: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    unqualified: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    incomplete: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+    new:           'bg-[#E8ECF8] text-[#3D4B8F] border-[#E2E6F8]',
+    assigned:      'bg-[#E8ECF8] text-[#3D4B8F] border-[#E2E6F8]',
+    in_progress:   'bg-[#F0F2FF] text-[#8B9FE8] border-[#E2E6F8]',
+    proposal_sent: 'bg-[#F0F2FF] text-[#8B9FE8] border-[#E2E6F8]',
+    unqualified:   'bg-[#F0F2FF] text-[#8B9FE8] border-[#E2E6F8]',
+    incomplete:    'bg-[#F8F9FF] text-[#8B9FE8] border-[#E2E6F8]',
   }
-  return map[status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+  return map[status] || 'bg-[#F0F2FF] text-[#8B9FE8] border-[#E2E6F8]'
 }
 
 function sourceIcon(source?: string): string {
@@ -207,24 +201,19 @@ function KPICard({
   pulse?: boolean
 }) {
   return (
-    <div className={`glass-strong rounded-xl p-5 border-l-4 ${borderColor} ${pulse ? 'animate-pulse' : ''}`}>
+    <div className={`rounded-xl p-5 border border-[#E2E6F8] bg-white shadow-sm border-l-4 ${borderColor} ${pulse ? 'animate-pulse' : ''}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-3xl font-bold text-foreground">
+          <p className="text-3xl font-bold text-[#3D4B8F]">
             <AnimatedNumber value={value} />
           </p>
-          <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-1 text-xs uppercase tracking-wider text-[#8B9FE8]">{label}</p>
         </div>
         {trend && (
-          <div className={`flex h-6 w-6 items-center justify-center rounded-full ${
-            trend === 'up' ? 'bg-emerald-500/10' : 'bg-rose-500/10'
-          }`}>
-            <svg 
-              className={`h-4 w-4 ${trend === 'up' ? 'text-emerald-400' : 'text-rose-400 rotate-180'}`}
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
-              strokeWidth={2}
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F0F2FF]">
+            <svg
+              className={`h-4 w-4 text-[#3D4B8F] ${trend === 'down' ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
             </svg>
@@ -238,10 +227,10 @@ function KPICard({
 // ─── Status Pill ──────────────────────────────────────────────────────────────
 function StatusPill({ label, status, color }: { label: string; status: string; color: string }) {
   return (
-    <div className={`glass rounded-full px-4 py-2 flex items-center gap-2 border ${color}`}>
-      <span className={`h-2 w-2 rounded-full ${color.replace('border-', 'bg-')} pulse-dot`} />
-      <span className="text-xs font-medium text-foreground">{label}</span>
-      <span className={`text-xs ${color.replace('border-', 'text-')}`}>{status}</span>
+    <div className="rounded-full px-4 py-2 flex items-center gap-2 border border-[#E2E6F8] bg-white">
+      <span className="h-2 w-2 rounded-full bg-[#3D4B8F] animate-pulse" />
+      <span className="text-xs font-medium text-[#3D4B8F]">{label}</span>
+      <span className="text-xs font-semibold text-[#8B9FE8]">{status}</span>
     </div>
   )
 }
@@ -257,10 +246,10 @@ function LiveClock() {
 
   return (
     <div className="text-center">
-      <p className="text-sm font-medium text-foreground">
+      <p className="text-sm font-medium text-gray-600">
         {time.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
       </p>
-      <p className="text-2xl font-bold text-gradient">
+      <p className="text-2xl font-bold text-[#3D4B8F]">
         {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
       </p>
     </div>
@@ -275,20 +264,20 @@ function LeadRow({ lead, onClick }: { lead: Lead; onClick: () => void }) {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass rounded-xl p-4 cursor-pointer hover:bg-white/5 transition-all border border-border"
+      className="rounded-xl p-4 cursor-pointer bg-white hover:bg-[#F0F2FF] transition-all border border-[#E2E6F8] hover:border-[#8B9FE8] hover:shadow-sm"
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
         <span className="text-2xl">{sourceIcon(lead.source)}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="font-semibold text-foreground truncate">{contact.name}</p>
+            <p className="font-semibold text-[#3D4B8F] truncate">{contact.name}</p>
             <span className={`text-xs px-2 py-0.5 rounded-full border ${policyColor(lead.policy_type)}`}>
               {lead.policy_type}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className={`font-semibold ${lead.lead_score > 0.6 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className="flex items-center gap-3 text-xs text-[#8B9FE8]">
+            <span className="font-semibold text-[#3D4B8F]">
               {Math.round(lead.lead_score * 100)}%
             </span>
             <span className={`px-2 py-0.5 rounded-full border ${statusColor(lead.status)}`}>
@@ -341,11 +330,11 @@ function LeadDetailModal({ lead, onClose }: { lead: Lead; onClose: () => void })
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-2xl rounded-3xl border border-border shadow-2xl"
+        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl border border-[#E2E6F8] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-accent p-6 border-b border-border">
+        <div className="sticky top-0 p-6 border-b border-[#E2E6F8] bg-[#3D4B8F]">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white">Lead Details</h2>
@@ -365,23 +354,23 @@ function LeadDetailModal({ lead, onClose }: { lead: Lead; onClose: () => void })
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Contact Info */}
-          <div className="glass-strong rounded-2xl p-6">
+          <div className="rounded-2xl p-6 bg-[#F8F9FF] border border-[#E2E6F8]">
             <h3 className="text-lg font-semibold text-foreground mb-4">Contact Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Name</p>
-                <p className="text-foreground font-medium">{contact.name}</p>
+                <p className="text-xs text-gray-500 mb-1">Name</p>
+                <p className="text-[#3D4B8F] font-medium">{contact.name}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Email</p>
-                <p className="text-foreground font-medium">{contact.email}</p>
+                <p className="text-xs text-gray-500 mb-1">Email</p>
+                <p className="text-[#3D4B8F] font-medium">{contact.email}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Phone</p>
-                <p className="text-foreground font-medium">{contact.phone}</p>
+                <p className="text-xs text-gray-500 mb-1">Phone</p>
+                <p className="text-[#3D4B8F] font-medium">{contact.phone}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Policy Type</p>
+                <p className="text-xs text-gray-500 mb-1">Policy Type</p>
                 <span className={`inline-block px-3 py-1 rounded-full border text-sm ${policyColor(lead.policy_type)}`}>
                   {lead.policy_type}
                 </span>
@@ -390,8 +379,8 @@ function LeadDetailModal({ lead, onClose }: { lead: Lead; onClose: () => void })
           </div>
 
           {/* Lead Score */}
-          <div className="glass-strong rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Lead Score</h3>
+          <div className="rounded-2xl p-6 bg-[#F8F9FF] border border-[#E2E6F8]">
+            <h3 className="text-lg font-semibold text-[#3D4B8F] mb-4">Lead Score</h3>
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24">
                 <svg className="transform -rotate-90" viewBox="0 0 100 100">
@@ -433,16 +422,16 @@ function LeadDetailModal({ lead, onClose }: { lead: Lead; onClose: () => void })
           </div>
 
           {/* Status */}
-          <div className="glass-strong rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Status</h3>
+          <div className="rounded-2xl p-6 bg-[#F8F9FF] border border-[#E2E6F8]">
+            <h3 className="text-lg font-semibold text-[#3D4B8F] mb-4">Status</h3>
             <span className={`inline-block px-4 py-2 rounded-full border ${statusColor(lead.status)}`}>
               {lead.status.replace('_', ' ')}
             </span>
           </div>
 
           {/* Audit Trail */}
-          <div className="glass-strong rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Audit Trail</h3>
+          <div className="rounded-2xl p-6 bg-[#F8F9FF] border border-[#E2E6F8]">
+            <h3 className="text-lg font-semibold text-[#3D4B8F] mb-4">Audit Trail</h3>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading...</p>
             ) : auditEntries.length === 0 ? (
@@ -837,6 +826,155 @@ function WorkbenchPanel() {
   )
 }
 
+// ─── AI Manager Panel ────────────────────────────────────────────────────────
+interface AiMessage { role: 'user' | 'assistant'; content: string; tools?: string[]; ragChunks?: number }
+const QUICK_ACTIONS = [
+  { label: 'Show insights',      msg: 'Show insights' },
+  { label: 'Recent activity',    msg: 'Show recent activity' },
+  { label: 'Generate report',    msg: 'Generate a report' },
+  { label: 'Campaign summary',   msg: 'How are my campaigns doing?' },
+]
+
+function AiManagerPanel({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState<AiMessage[]>([
+    { role: 'assistant', content: '👋 Hi, I\'m your **AI Manager**. I have live access to your leads, audit logs, workflows, and analytics.\n\nTry a quick action below or ask me anything about your sales data.' }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef  = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
+
+  const send = async (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed || loading) return
+    setInput('')
+    const next: AiMessage[] = [...messages, { role: 'user', content: trimmed }]
+    setMessages(next)
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/api/ai-manager/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })) }),
+      })
+      const data = await res.json()
+      setMessages(p => [...p, { role: 'assistant', content: data.reply || '(no response)', tools: data.tool_calls_made, ragChunks: data.rag_chunks_used }])
+    } catch {
+      setMessages(p => [...p, { role: 'assistant', content: '⚠️ Could not reach the AI Manager. Check backend connection.' }])
+    } finally { setLoading(false); setTimeout(() => inputRef.current?.focus(), 100) }
+  }
+
+  // Minimal markdown: bold, bullet, table header
+  const renderMd = (text: string) => (
+    <span dangerouslySetInnerHTML={{ __html:
+      text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`(.+?)`/g, '<code class="bg-[#E8ECF8] px-1 rounded text-[#3D4B8F] text-xs">$1</code>')
+        .replace(/^(#+) (.+)$/gm, '<span class="font-bold text-[#3D4B8F]">$2</span>')
+        .replace(/^[-*] (.+)$/gm, '• $1')
+        .replace(/\n/g, '<br/>')
+    }} />
+  )
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(15,20,40,0.45)' }} onClick={onClose}>
+      <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="flex h-full w-full max-w-md flex-col shadow-2xl" style={{ background: '#fff' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#E2E6F8] px-5 py-4"
+          style={{ background: 'linear-gradient(135deg,#3D4B8F,#5A6BC4)' }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+              <span className="text-lg">🤖</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">AI Manager</p>
+              <p className="text-xs" style={{ color: '#C5CCEF' }}>Live data · Groq LLaMA 3.3</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-xl p-2 text-white/60 hover:bg-white/20 hover:text-white transition-colors">✕</button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: '#F8F9FF' }}>
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                m.role === 'user'
+                  ? 'bg-[#3D4B8F] text-white rounded-br-sm'
+                  : 'bg-white border border-[#E2E6F8] text-gray-800 rounded-bl-sm shadow-sm'
+              }`}>
+                {m.role === 'assistant' ? renderMd(m.content) : m.content}
+                {m.role === 'assistant' && (m.ragChunks ?? 0) > 0 && (
+                  <div className="mt-1.5">
+                    <span className="rounded-full bg-[#F0F2FF] border border-[#E2E6F8] px-2 py-0.5 text-xs text-[#8B9FE8]">📚 {m.ragChunks} knowledge base {m.ragChunks === 1 ? 'doc' : 'docs'} used</span>
+                  </div>
+                )}
+                {m.tools && m.tools.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {m.tools.map((t, ti) => (
+                      <span key={`${ti}-${t}`} className="rounded-full bg-[#E8ECF8] px-2 py-0.5 text-xs text-[#8B9FE8]">⚡ {t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="rounded-2xl rounded-bl-sm bg-white border border-[#E2E6F8] px-4 py-3 shadow-sm">
+                <div className="flex gap-1">
+                  {[0,1,2].map(i => <span key={i} className="h-2 w-2 rounded-full bg-[#8B9FE8] animate-bounce" style={{ animationDelay: `${i*0.15}s` }} />)}
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Quick actions */}
+        <div className="border-t border-[#E2E6F8] px-4 py-2 flex gap-2 overflow-x-auto" style={{ background: '#fff' }}>
+          {QUICK_ACTIONS.map(q => (
+            <button key={q.label} onClick={() => send(q.msg)}
+              className="shrink-0 rounded-full border border-[#E2E6F8] bg-[#F0F2FF] px-3 py-1 text-xs font-medium text-[#3D4B8F] hover:bg-[#E8ECF8] transition-colors">
+              {q.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div className="border-t border-[#E2E6F8] p-4" style={{ background: '#fff' }}>
+          <div className="flex items-center gap-2 rounded-xl border border-[#E2E6F8] bg-[#F8F9FF] px-4 py-2 focus-within:border-[#8B9FE8] focus-within:ring-2 focus-within:ring-[#8B9FE8]/20 transition-all">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send(input)}
+              placeholder="Ask about leads, reports, activity…"
+              className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-[#8B9FE8] outline-none"
+              disabled={loading}
+            />
+            <button onClick={() => send(input)} disabled={!input.trim() || loading}
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3D4B8F] text-white disabled:opacity-40 hover:bg-[#5A6BC4] transition-colors">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.269 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+            </button>
+          </div>
+          <p className="mt-1.5 text-center text-xs" style={{ color: '#8B9FE8' }}>AI Manager · powered by live platform data</p>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function CommandCenter() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -927,9 +1065,9 @@ export default function CommandCenter() {
   const policyViolations = analytics?.policy_violations || 0
 
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className="min-h-screen bg-white">
       {/* Top Bar */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-[#0F172A] to-[#1E1B4B] px-6 py-4">
+      <header className="sticky top-0 z-40 border-b border-[#E2E6F8] bg-white px-6 py-4 shadow-sm">
         <div className="mx-auto max-w-[1800px]">
           <div className="flex items-center justify-between mb-4">
             {/* Left: Navigation */}
@@ -953,8 +1091,8 @@ export default function CommandCenter() {
                 <span className="text-sm font-semibold text-white">Website</span>
               </Link>
               <div className="ml-4">
-                <h1 className="text-xl font-bold text-white">InsureFlow Command Center</h1>
-                <p className="text-xs text-white/80">Real-time Sales Intelligence</p>
+                <h1 className="text-xl font-bold text-[#3D4B8F]">InsureFlow Command Center</h1>
+                <p className="text-xs text-[#8B9FE8]">Real-time Sales Intelligence</p>
               </div>
             </div>
 
@@ -971,34 +1109,11 @@ export default function CommandCenter() {
 
           {/* KPI Cards */}
           <div className="grid grid-cols-5 gap-4">
-            <KPICard
-              label="Total Leads Today"
-              value={analytics?.total_leads_today || leads.length}
-              trend="up"
-              borderColor="border-blue-500"
-            />
-            <KPICard
-              label="Qualified"
-              value={qualifiedCount}
-              trend="up"
-              borderColor="border-emerald-500"
-            />
-            <KPICard
-              label="Unqualified"
-              value={unqualifiedCount}
-              borderColor="border-rose-500"
-            />
-            <KPICard
-              label="Routed to Workbench"
-              value={workbenchCount}
-              borderColor="border-amber-500"
-            />
-            <KPICard
-              label="Policy Violations"
-              value={policyViolations}
-              borderColor="border-rose-500"
-              pulse={policyViolations > 0}
-            />
+            <KPICard label="Total Leads Today" value={analytics?.total_leads_today || leads.length} trend="up" borderColor="border-[#3D4B8F]" />
+            <KPICard label="Qualified"          value={qualifiedCount}    trend="up" borderColor="border-[#8B9FE8]" />
+            <KPICard label="Unqualified"        value={unqualifiedCount}             borderColor="border-[#8B9FE8]" />
+            <KPICard label="Routed to Workbench" value={workbenchCount}              borderColor="border-[#3D4B8F]" />
+            <KPICard label="Policy Violations"  value={policyViolations}            borderColor="border-[#3D4B8F]" pulse={policyViolations > 0} />
           </div>
         </div>
       </header>
@@ -1008,14 +1123,14 @@ export default function CommandCenter() {
         <div className="grid grid-cols-12 gap-6 mb-8">
           {/* Left: Live Lead Feed */}
           <div className="col-span-4">
-            <div className="glass-strong rounded-2xl p-6 h-[600px] flex flex-col">
+            <div className="rounded-2xl p-6 h-[600px] flex flex-col bg-white border border-[#E2E6F8] shadow-sm">
               <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-semibold text-foreground">Live Lead Feed</h2>
-                <span className="h-2 w-2 rounded-full bg-emerald-500 pulse-dot" />
+                <h2 className="text-lg font-semibold text-[#3D4B8F]">Live Lead Feed</h2>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
               <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
                 {leads.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
+                  <p className="text-sm text-[#8B9FE8] text-center py-8">
                     No leads yet today — waiting for intake
                   </p>
                 ) : (
@@ -1024,7 +1139,7 @@ export default function CommandCenter() {
                   ))
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-4">
+              <p className="text-xs text-[#8B9FE8] mt-4">
                 Last updated {timeAgo(lastRefresh.toISOString())}
               </p>
             </div>
@@ -1032,22 +1147,17 @@ export default function CommandCenter() {
 
           {/* Center: Pipeline Overview */}
           <div className="col-span-5">
-            <div className="glass-strong rounded-2xl p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-6">Pipeline Overview</h2>
+            <div className="rounded-2xl p-6 bg-white border border-[#E2E6F8] shadow-sm">
+              <h2 className="text-lg font-semibold text-[#3D4B8F] mb-6">Pipeline Overview</h2>
               <div className="space-y-6">
-                {/* Funnel Chart Placeholder */}
-                <div className="h-48 flex items-center justify-center border border-dashed border-border rounded-xl">
-                  <p className="text-sm text-muted-foreground">Funnel Chart (Recharts)</p>
+                <div className="h-48 flex items-center justify-center border border-dashed border-[#E2E6F8] rounded-xl bg-[#F8F9FF]">
+                  <p className="text-sm text-[#8B9FE8]">Funnel Chart (Recharts)</p>
                 </div>
-
-                {/* Donut Chart Placeholder */}
-                <div className="h-48 flex items-center justify-center border border-dashed border-border rounded-xl">
-                  <p className="text-sm text-muted-foreground">Donut Chart (Recharts)</p>
+                <div className="h-48 flex items-center justify-center border border-dashed border-[#E2E6F8] rounded-xl bg-[#F8F9FF]">
+                  <p className="text-sm text-[#8B9FE8]">Donut Chart (Recharts)</p>
                 </div>
-
-                {/* Bar Chart Placeholder */}
-                <div className="h-48 flex items-center justify-center border border-dashed border-border rounded-xl">
-                  <p className="text-sm text-muted-foreground">Bar Chart (Recharts)</p>
+                <div className="h-48 flex items-center justify-center border border-dashed border-[#E2E6F8] rounded-xl bg-[#F8F9FF]">
+                  <p className="text-sm text-[#8B9FE8]">Bar Chart (Recharts)</p>
                 </div>
               </div>
             </div>
@@ -1055,34 +1165,30 @@ export default function CommandCenter() {
 
           {/* Right: Rep Workload */}
           <div className="col-span-3">
-            <div className="glass-strong rounded-2xl p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Rep Availability</h2>
+            <div className="rounded-2xl p-6 bg-white border border-[#E2E6F8] shadow-sm">
+              <h2 className="text-lg font-semibold text-[#3D4B8F] mb-4">Rep Availability</h2>
               <div className="space-y-3">
                 {reps.map((rep) => (
-                  <div key={rep.rep_id} className="glass rounded-xl p-4 border border-border">
+                  <div key={rep.rep_id} className="rounded-xl p-4 bg-[#F8F9FF] border border-[#E2E6F8]">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-foreground">{rep.name}</p>
+                        <p className="font-semibold text-[#3D4B8F]">{rep.name}</p>
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${policyColor(rep.policy_type)}`}>
                           {rep.policy_type}
                         </span>
                       </div>
-                      <span className={`h-2 w-2 rounded-full ${rep.is_available ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <span className={`h-2 w-2 rounded-full ${rep.is_available ? 'bg-[#3D4B8F]' : 'bg-[#8B9FE8]'}`} />
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs text-[#8B9FE8]">
                         <span>Load: {rep.current_load}/{rep.max_load}</span>
                         {rep.current_load >= 10 && (
-                          <span className="text-rose-400 font-semibold">Overloaded</span>
+                          <span className="text-[#3D4B8F] font-semibold">Full</span>
                         )}
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-2 bg-[#E2E6F8] rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all ${
-                            rep.current_load >= 10 ? 'bg-rose-500' :
-                            rep.current_load >= 7 ? 'bg-amber-500' :
-                            'bg-blue-500'
-                          }`}
+                          className="h-full bg-[#3D4B8F] transition-all"
                           style={{ width: `${(rep.current_load / rep.max_load) * 100}%` }}
                         />
                       </div>
@@ -1098,54 +1204,46 @@ export default function CommandCenter() {
         <WorkbenchPanel />
 
         {/* Audit Trail */}
-        <div className="glass-strong rounded-2xl p-6">
+        <div className="rounded-2xl p-6 bg-white border border-[#E2E6F8] shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <svg className="h-5 w-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-5 w-5 text-[#3D4B8F]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
             </svg>
-            <h2 className="text-lg font-semibold text-foreground">Audit Trail</h2>
+            <h2 className="text-lg font-semibold text-[#3D4B8F]">Audit Trail</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Timestamp</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Resource</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Actor</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Action</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Description</th>
+                <tr className="border-b border-[#E2E6F8]">
+                  <th className="text-left py-3 px-4 text-[#8B9FE8] font-medium">Timestamp</th>
+                  <th className="text-left py-3 px-4 text-[#8B9FE8] font-medium">Resource</th>
+                  <th className="text-left py-3 px-4 text-[#8B9FE8] font-medium">Actor</th>
+                  <th className="text-left py-3 px-4 text-[#8B9FE8] font-medium">Action</th>
+                  <th className="text-left py-3 px-4 text-[#8B9FE8] font-medium">Description</th>
                 </tr>
               </thead>
               <tbody>
                 {auditLog.map((entry) => (
                   <tr
                     key={entry.id}
-                    className={`border-b border-border ${
-                      entry.action?.includes('blocked') ? 'bg-rose-500/5' :
-                      entry.action?.includes('approved') ? 'bg-emerald-500/5' :
-                      ''
-                    }`}
+                    className="border-b border-[#E2E6F8] hover:bg-[#F8F9FF] transition-colors"
                   >
-                    <td className="py-3 px-4 text-muted-foreground">
+                    <td className="py-3 px-4 text-[#8B9FE8] text-xs">
                       {new Date(entry.timestamp).toLocaleString()}
                     </td>
-                    <td className="py-3 px-4 text-foreground font-mono text-xs">
-                      {entry.resource_type && entry.resource_id 
+                    <td className="py-3 px-4 text-[#3D4B8F] font-mono text-xs">
+                      {entry.resource_type && entry.resource_id
                         ? `${entry.resource_type}:${entry.resource_id.substring(0, 8)}...`
                         : '—'
                       }
                     </td>
-                    <td className="py-3 px-4 text-foreground">{entry.actor_email || 'System'}</td>
+                    <td className="py-3 px-4 text-[#3D4B8F] text-sm">{entry.actor_email || 'System'}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded-full text-xs ${
-                        entry.action?.includes('blocked') ? 'bg-rose-500/10 text-rose-400' :
-                        entry.action?.includes('approved') ? 'bg-emerald-500/10 text-emerald-400' :
-                        'bg-blue-500/10 text-blue-400'
-                      }`}>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#E8ECF8] text-[#3D4B8F]">
                         {entry.action}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-muted-foreground text-xs">{entry.description || '—'}</td>
+                    <td className="py-3 px-4 text-[#8B9FE8] text-xs">{entry.description || '—'}</td>
                   </tr>
                 ))}
               </tbody>

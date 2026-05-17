@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+const WS_URL  = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001').replace(/^http/, 'ws')
 const TOKEN_KEY = 'vity_rep_token'
 const NAME_KEY = 'vity_rep_name'
 const TEAM_KEY = 'vity_rep_team'
@@ -207,8 +208,220 @@ function AuthScreen({ onSuccess }: { onSuccess: (name: string, team: string, tok
   )
 }
 
+// ─── Process Call Panel ───────────────────────────────────────────────────────
+interface WsMsg { lead_id: string; agent: string; message: string }
+interface AgentUpdate { agent: string; message: string; ts: string; isDone: boolean }
+const DOMAINS_PC = ['life','health','car','home'] as const
+const AGENT_ICON: Record<string,string> = { Serialize:'⚙️', HubSpot:'🔗', Slack:'💬', Email:'📧', Error:'❌' }
+
+function ProcessCallPanel({ lead, repName, repEmail, onClose }: {
+  lead: Lead; repName: string; repEmail: string; onClose: () => void
+}) {
+  const contact = getContact(lead)
+  const [domain,       setDomain]       = useState<string>(lead.policy_type in {life:1,health:1,car:1,home:1} ? lead.policy_type : 'health')
+  const [assignedTo,   setAssignedTo]   = useState(repName)
+  const [assignedMail, setAssignedMail] = useState(repEmail)
+  const [audioFile,    setAudioFile]    = useState<File|null>(null)
+  const [status,       setStatus]       = useState<'idle'|'uploading'|'processing'|'done'|'error'>('idle')
+  const [leadId,       setLeadId]       = useState<string|null>(null)
+  const [updates,      setUpdates]      = useState<AgentUpdate[]>([])
+  const [errMsg,       setErrMsg]       = useState('')
+  const wsRef    = useRef<WebSocket|null>(null)
+  const fileRef  = useRef<HTMLInputElement>(null)
+  const logEnd   = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { logEnd.current?.scrollIntoView({ behavior:'smooth' }) }, [updates])
+  useEffect(() => () => { wsRef.current?.close() }, [])
+
+  const openWS = (id: string) => {
+    const ws = new WebSocket(`${WS_URL}/ws/${id}`)
+    wsRef.current = ws
+    ws.onopen = () => setStatus('processing')
+    ws.onmessage = ev => {
+      try {
+        const m: WsMsg = JSON.parse(ev.data)
+        setUpdates(p => [...p, { agent:m.agent, message:m.message, ts:new Date().toLocaleTimeString(), isDone:m.message==='✓ Done' }])
+      } catch {}
+    }
+    ws.onclose = () => setStatus(p => p==='processing'?'done':p)
+    ws.onerror = () => { setErrMsg('WebSocket failed'); setStatus('error') }
+  }
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!audioFile) { setErrMsg('Select an audio file'); return }
+    setStatus('uploading'); setErrMsg(''); setUpdates([]); wsRef.current?.close()
+    const ctx = JSON.stringify({ name:contact.name, email:contact.email, mobileNo:contact.phone, domain, transcript:'', assigned_to:assignedTo, assigned_to_mail:assignedMail })
+    const fd = new FormData()
+    fd.append('audio_file', audioFile)
+    fd.append('context', ctx)
+    try {
+      const r = await fetch(`${API_URL}/api/process-call`, { method:'POST', body:fd })
+      if (!r.ok) throw new Error((await r.json().catch(()=>({detail:r.statusText}))).detail)
+      const d = await r.json()
+      setLeadId(d.lead_id)
+      openWS(d.lead_id)
+    } catch(e) { setErrMsg(e instanceof Error?e.message:'Failed'); setStatus('error') }
+  }
+
+  const inp = 'w-full rounded-xl border border-[#E2E6F8] bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#8B9FE8] focus:outline-none focus:ring-2 focus:ring-[#8B9FE8]/20 transition-all'
+  const lbl = 'block text-xs font-semibold text-[#3D4B8F] uppercase tracking-wide mb-1.5'
+
+  return (
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-50 flex" style={{background:'rgba(15,20,40,0.6)'}} onClick={onClose}>
+      <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring',stiffness:300,damping:30}}
+        className="ml-auto flex h-full w-full max-w-3xl flex-col overflow-hidden shadow-2xl"
+        style={{background:'#fff'}}
+        onClick={e=>e.stopPropagation()}>
+
+        {/* Header — brand gradient */}
+        <div className="flex items-center justify-between border-b border-[#E2E6F8] px-6 py-4"
+          style={{background:'linear-gradient(135deg,#3D4B8F 0%,#5A6BC4 100%)'}}>
+          <div>
+            <h2 className="text-base font-bold text-white">Process Call — {contact.name}</h2>
+            <p className="mt-0.5 text-xs" style={{color:'#C5CCEF'}}>{contact.email} · {lead.policy_type}</p>
+          </div>
+          <button onClick={onClose}
+            className="rounded-xl p-2 transition-colors hover:bg-white/20"
+            style={{color:'#C5CCEF'}}>✕</button>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden" style={{background:'#F0F2FF'}}>
+          {/* ── Left: Form ── */}
+          <form onSubmit={submit}
+            className="flex w-1/2 flex-col gap-4 overflow-y-auto border-r border-[#E2E6F8] p-5"
+            style={{background:'#fff'}}>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className={lbl}>Name</label>
+                <input className={inp} value={contact.name} readOnly /></div>
+              <div><label className={lbl}>Email</label>
+                <input className={inp} value={contact.email} readOnly /></div>
+            </div>
+
+            <div><label className={lbl}>Mobile</label>
+              <input className={inp} value={contact.phone} readOnly /></div>
+
+            <div>
+              <label className={lbl}>Insurance Domain</label>
+              <div className="flex gap-2 flex-wrap">
+                {DOMAINS_PC.map(d => (
+                  <button key={d} type="button" onClick={()=>setDomain(d)}
+                    className={`rounded-full border px-4 py-1.5 text-xs font-semibold capitalize transition-all ${
+                      domain===d
+                        ? 'border-[#3D4B8F] bg-[#3D4B8F] text-white shadow-sm'
+                        : 'border-[#E2E6F8] text-[#8B9FE8] hover:border-[#8B9FE8]'}`}>{d}</button>
+                ))}
+              </div>
+            </div>
+
+            <div><label className={lbl}>Assigned To</label>
+              <input className={inp} value={assignedTo} onChange={e=>setAssignedTo(e.target.value)} /></div>
+
+            <div><label className={lbl}>Assigned Email</label>
+              <input className={inp} value={assignedMail} onChange={e=>setAssignedMail(e.target.value)} /></div>
+
+            <div>
+              <label className={lbl}>Audio File *</label>
+              <div onClick={()=>fileRef.current?.click()}
+                className={`cursor-pointer rounded-xl border-2 border-dashed py-6 text-center transition-all ${
+                  audioFile
+                    ? 'border-[#3D4B8F] bg-[#F0F2FF]'
+                    : 'border-[#E2E6F8] hover:border-[#8B9FE8] hover:bg-[#F0F2FF]'}`}>
+                <p className="text-2xl">{audioFile ? '🎵' : '☁️'}</p>
+                <p className="mt-1 text-xs font-medium text-[#3D4B8F]">
+                  {audioFile ? audioFile.name : 'Click to upload audio'}
+                </p>
+                <p className="text-xs" style={{color:'#8B9FE8'}}>
+                  {audioFile ? `${(audioFile.size/1024/1024).toFixed(1)} MB` : 'MP3, M4A, WAV — any length'}
+                </p>
+                <input ref={fileRef} type="file" accept="audio/*" className="hidden"
+                  onChange={e=>setAudioFile(e.target.files?.[0]??null)} />
+              </div>
+            </div>
+
+            {errMsg && (
+              <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-600">{errMsg}</p>
+            )}
+
+            <button type="submit" disabled={status==='uploading'||status==='processing'}
+              className="w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-60"
+              style={{background: status==='uploading'||status==='processing' ? '#8B9FE8' : '#3D4B8F'}}>
+              {status==='uploading' ? '⏳ Transcribing…' : status==='processing' ? '🤖 Processing…' : '🚀 Process Call'}
+            </button>
+          </form>
+
+          {/* ── Right: Live log ── */}
+          <div className="flex w-1/2 flex-col" style={{background:'#fff'}}>
+            <div className="flex items-center justify-between border-b border-[#E2E6F8] px-4 py-3">
+              <p className="text-xs font-semibold text-[#3D4B8F]">Live Agent Log</p>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                status==='done'       ? 'bg-green-50 text-green-600' :
+                status==='processing' ? 'bg-[#E8ECF8] text-[#3D4B8F] animate-pulse' :
+                'bg-gray-100 text-gray-400'}`}>
+                {status==='done' ? '✅ Complete' : status==='processing' ? '🤖 Running' : '— Waiting'}
+              </span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2 p-4" style={{background:'#F8F9FF', maxHeight:'calc(100vh - 200px)'}}>
+              {updates.length===0 ? (
+                <div className="flex h-40 flex-col items-center justify-center gap-2 text-center">
+                  <span className="text-3xl opacity-20">🤖</span>
+                  <p className="text-xs" style={{color:'#8B9FE8'}}>Agent updates appear here…</p>
+                </div>
+              ) : updates.map((u,i) => (
+                <div key={i} className={`rounded-xl border p-3 text-xs transition-all ${
+                  u.isDone
+                    ? 'border-green-100 bg-green-50 text-green-700'
+                    : 'border-[#E2E6F8] bg-[#F0F2FF] text-[#3D4B8F]'}`}>
+                  <div className="mb-1 flex justify-between">
+                    <span className="font-bold">{AGENT_ICON[u.agent]??'🔄'} {u.agent}</span>
+                    <span className="opacity-40">{u.ts}</span>
+                  </div>
+                  <p className="leading-relaxed whitespace-pre-wrap opacity-90">{u.message}</p>
+                </div>
+              ))}
+              <div ref={logEnd}/>
+            </div>
+
+            {/* Pipeline progress */}
+            {(status==='processing'||status==='done') && (
+              <div className="border-t border-[#E2E6F8] px-4 py-3">
+                <div className="flex justify-between gap-1">
+                  {['Serialize','HubSpot','Slack','Email'].map(agent => {
+                    const done   = updates.some(u=>u.agent===agent&&u.isDone)
+                    const active = updates.some(u=>u.agent===agent)&&!done
+                    return (
+                      <div key={agent} className="flex flex-1 flex-col items-center gap-1">
+                        <div className={`h-1.5 w-full rounded-full transition-all duration-500 ${
+                          done?'bg-[#3D4B8F]':active?'bg-[#8B9FE8] animate-pulse':'bg-gray-100'}`}/>
+                        <span className={`text-xs font-medium ${
+                          done?'text-[#3D4B8F]':active?'text-[#8B9FE8]':'text-gray-300'}`}>
+                          {done?'✓ ':active?'… ':''}{agent}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {leadId && (
+              <p className="border-t border-[#E2E6F8] px-4 py-2 font-mono text-xs" style={{color:'#8B9FE8'}}>
+                ID: {leadId}
+              </p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 // ─── Lead Card ────────────────────────────────────────────────────────────────
-function LeadCard({ lead }: { lead: Lead }) {
+
+function LeadCard({ lead, onOpen }: { lead: Lead; onOpen?: () => void }) {
   const contact = getContact(lead)
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all">
@@ -227,16 +440,18 @@ function LeadCard({ lead }: { lead: Lead }) {
           </span>
         </div>
       </div>
-      {/* Score bar */}
       <div className="mt-3 flex items-center gap-2">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-          <div
-            className="h-full rounded-full bg-indigo-500 transition-all"
-            style={{ width: `${Math.round((lead.lead_score ?? 0) * 100)}%` }}
-          />
+          <div className="h-full rounded-full bg-indigo-500 transition-all" style={{ width:`${Math.round((lead.lead_score??0)*100)}%` }}/>
         </div>
-        <span className="text-xs text-gray-500">{Math.round((lead.lead_score ?? 0) * 100)}%</span>
+        <span className="text-xs text-gray-500">{Math.round((lead.lead_score??0)*100)}%</span>
       </div>
+      {onOpen && (
+        <button onClick={onOpen}
+          className="mt-3 w-full rounded-lg border border-indigo-200 bg-indigo-50 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all">
+          🚀 Open &amp; Process Call
+        </button>
+      )}
     </div>
   )
 }
@@ -253,9 +468,10 @@ function Dashboard({
   token: string
   onSignOut: () => void
 }) {
-  const [assigned, setAssigned] = useState<Lead[]>([])
-  const [completed, setCompleted] = useState<Lead[]>([])
-  const [loading, setLoading] = useState(true)
+  const [assigned,     setAssigned]     = useState<Lead[]>([])
+  const [completed,    setCompleted]    = useState<Lead[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [activePanel,  setActivePanel]  = useState<Lead|null>(null)
 
   const fetchLeads = useCallback(async () => {
     setLoading(true)
@@ -360,7 +576,9 @@ function Dashboard({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {assigned.map(lead => <LeadCard key={lead.lead_id} lead={lead} />)}
+                  {assigned.map(lead => (
+                    <LeadCard key={lead.lead_id} lead={lead} onOpen={() => setActivePanel(lead)} />
+                  ))}
                 </div>
               )}
             </div>
@@ -389,6 +607,18 @@ function Dashboard({
           </div>
         )}
       </main>
+
+      {/* Process Call slide-over */}
+      <AnimatePresence>
+        {activePanel && (
+          <ProcessCallPanel
+            lead={activePanel}
+            repName={repName}
+            repEmail=""
+            onClose={() => setActivePanel(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
