@@ -230,52 +230,56 @@ function IntakePortal() {
     const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
 
     try {
-      // Use the workflow API from the UI folder
-      const WORKFLOW_API_URL = 'https://auto-workflow-api.supervity.ai/api/v1/workflow-runs/execute/stream';
-      const BEARER_TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJCOVg3RVFFWE8td25ucjBJd3Vjbm5vQWlVcWdDM1JpNzh2aGMxMG9xTmJnIn0.eyJleHAiOjE3ODY3MTI5MTMsImlhdCI6MTc3ODkzOTIwNywianRpIjoiMjgzZTY4MWEtNWQ4NS00ZWU0LTk1OTItOWNlNzEyODAxM2ZlIiwiaXNzIjoiaHR0cHM6Ly9hdXRvLXNzby5zdXBlcnZpdHkuYWkvYXV0aC9yZWFsbXMvdGVjaGZvcmNlIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjA4ZTQzNzI4LTU4NDYtNDA3Ni04YmJiLTM3MTRjOWI1Mjc0NyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJvdC1tYWtlciIsInNpZCI6IjMwMjM4OTJiLTUwMmMtNGJjZS04NmQ3LWIxZTliNTc2N2ViOCIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL2F1dG8uc3VwZXJ2aXR5LmFpIiwiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy10ZWNoZm9yY2UiLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlNhaXNoIE11bmdhc2UiLCJncm91cHMiOlsiL0dpdFB1c2gvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvU2Fpc2ggTXVuZ2FzZSBXb3Jrc3BhY2UvUm9sZXMvQWRtaW5zIiwiL1NhaXNoIE11bmdhc2UgV29ya3NwYWNlL0hhY2thdGhvbi9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaCIsIi9TYWlzaCBNdW5nYXNlIFdvcmtzcGFjZSJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIiwiZ2l2ZW5fbmFtZSI6IlNhaXNoIiwiZmFtaWx5X25hbWUiOiJNdW5nYXNlIiwiZW1haWwiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIn0.EvC0p4HaLqDDRHTDT2drl_2Gbp1_4HBUddy_Nn6uOxYIrKtIqHMhIDmNgUD8wzZDw71JoWu7WwGzNhGpz_c-CIHJkHQ-E3oVjZoHmAMWvx6WqEYVEqbkZ3vsw0E10tLX-SIB-qZ-Gr-8SYYK_cxKwotf3MXL97DF97bzj5568bis1b-CRPxvxPB8Bm5o6VQeisUmArT80qA1ML2bjqq2LB_zcgOdEP8TFiIwllPavOsH51DldOzzCc_FdnPS15U4GvCsOU0uhv3Cnc85mT6fhwy7m8VxUukH0h49C6cS-ro4I6EgGLcpR8JoCJSYS8fuUqs2qJHYX08iSRqG-gvfmg';
-      const WORKFLOW_ID = '019e311c-a949-7000-9e6d-03c12d18031b';
-
-      // Create FormData for the external API
-      const formData = new FormData();
-      formData.append('workflowId', WORKFLOW_ID);
-      formData.append('inputs[source]', 'form');
+      // Use your backend API instead of Supervity directly
+      const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
       
-      // Combine form fields into payload_text
-      const payloadText = `Full Name: ${fullName}, Email: ${email}, Phone: ${phone}, Policy Type: ${policyType}, Comments: ${message || 'No additional comments'}`;
-      formData.append('inputs[payload_text]', payloadText);
+      // Map policy type to backend format
+      const policyTypeMap: Record<string, string> = {
+        'Health Insurance': 'health',
+        'Life Insurance': 'life',
+        'Auto/Car Insurance': 'car',
+        'Wealth & Asset Management': 'home',
+      };
+      
+      // Calculate lead score based on form completeness
+      let leadScore = 0.5; // Base score
+      if (message && message.trim().length > 10) leadScore += 0.2;
+      if (email.includes('@') && !email.endsWith('@gmail.com') && !email.endsWith('@yahoo.com')) leadScore += 0.15;
+      if (phone.length >= 10) leadScore += 0.15;
+      leadScore = Math.min(leadScore, 1.0);
 
-      console.log('Submitting to API:', WORKFLOW_API_URL);
-      console.log('Workflow ID:', WORKFLOW_ID);
-      console.log('Payload text:', payloadText);
+      // Create payload for your backend API
+      const payload = {
+        policy_type: policyTypeMap[policyType] || 'unknown',
+        contact: {
+          name: fullName,
+          email: email,
+          phone: phone,
+        },
+        lead_score: leadScore,
+      };
 
-      // Make request to external API
-      const response = await fetch(WORKFLOW_API_URL, {
+      console.log('Submitting to backend API:', `${BACKEND_API_URL}/api/intake/process-lead`);
+      console.log('Payload:', payload);
+
+      // Make request to your backend API
+      const response = await fetch(`${BACKEND_API_URL}/api/intake/process-lead`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${BEARER_TOKEN}`,
-          'x-source': 'v1',
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
-      const responseText = await response.text();
-      console.log('API Response Status:', response.status);
-      console.log('API Response Body:', responseText);
-
       if (!response.ok) {
-        console.error('External API error:', response.status, responseText);
-        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Backend API error:', response.status, errorData);
+        throw new Error(errorData.detail || `API request failed with status ${response.status}`);
       }
 
-      // Try to parse as JSON
-      let responseData;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch {
-        responseData = { raw: responseText };
-      }
-
-      console.log('Workflow execution successful:', responseData);
+      const responseData = await response.json();
+      console.log('Lead processed successfully:', responseData);
+      
       setLoading(false);
       setSubmitted(true);
     } catch (err) {
@@ -419,41 +423,48 @@ function ChatWidget() {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading, open]);
 
-  // Submit collected chat data to workflow API
+  // Submit collected chat data to backend API
   const submitChatData = async () => {
     if (leadSubmitted) return; // Already submitted
     
     try {
-      const WORKFLOW_API_URL = 'https://auto-workflow-api.supervity.ai/api/v1/workflow-runs/execute/stream';
-      const BEARER_TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJCOVg3RVFFWE8td25ucjBJd3Vjbm5vQWlVcWdDM1JpNzh2aGMxMG9xTmJnIn0.eyJleHAiOjE3ODY3MTI5MTMsImlhdCI6MTc3ODkzOTIwNywianRpIjoiMjgzZTY4MWEtNWQ4NS00ZWU0LTk1OTItOWNlNzEyODAxM2ZlIiwiaXNzIjoiaHR0cHM6Ly9hdXRvLXNzby5zdXBlcnZpdHkuYWkvYXV0aC9yZWFsbXMvdGVjaGZvcmNlIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjA4ZTQzNzI4LTU4NDYtNDA3Ni04YmJiLTM3MTRjOWI1Mjc0NyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJvdC1tYWtlciIsInNpZCI6IjMwMjM4OTJiLTUwMmMtNGJjZS04NmQ3LWIxZTliNTc2N2ViOCIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL2F1dG8uc3VwZXJ2aXR5LmFpIiwiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy10ZWNoZm9yY2UiLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlNhaXNoIE11bmdhc2UiLCJncm91cHMiOlsiL0dpdFB1c2gvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvU2Fpc2ggTXVuZ2FzZSBXb3Jrc3BhY2UvUm9sZXMvQWRtaW5zIiwiL1NhaXNoIE11bmdhc2UgV29ya3NwYWNlL0hhY2thdGhvbi9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaC9Sb2xlcy9BZG1pbnMiLCIvR2l0UHVzaCIsIi9TYWlzaCBNdW5nYXNlIFdvcmtzcGFjZSJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIiwiZ2l2ZW5fbmFtZSI6IlNhaXNoIiwiZmFtaWx5X25hbWUiOiJNdW5nYXNlIiwiZW1haWwiOiJzYWlzaG11bmdhc2VAZ21haWwuY29tIn0.EvC0p4HaLqDDRHTDT2drl_2Gbp1_4HBUddy_Nn6uOxYIrKtIqHMhIDmNgUD8wzZDw71JoWu7WwGzNhGpz_c-CIHJkHQ-E3oVjZoHmAMWvx6WqEYVEqbkZ3vsw0E10tLX-SIB-qZ-Gr-8SYYK_cxKwotf3MXL97DF97bzj5568bis1b-CRPxvxPB8Bm5o6VQeisUmArT80qA1ML2bjqq2LB_zcgOdEP8TFiIwllPavOsH51DldOzzCc_FdnPS15U4GvCsOU0uhv3Cnc85mT6fhwy7m8VxUukH0h49C6cS-ro4I6EgGLcpR8JoCJSYS8fuUqs2qJHYX08iSRqG-gvfmg';
-      const WORKFLOW_ID = '019e311c-a949-7000-9e6d-03c12d18031b';
-
-      // Combine all chat messages into payload_text
+      const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      
+      // Extract lead information from chat messages
+      // This is a simplified version - you might want to use AI to extract structured data
       const chatHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.text}`).join('\n');
-      const payloadText = `Chat Session ID: ${sessionId}\n\n${chatHistory}`;
+      
+      // Try to extract basic info from chat (this is a simple approach)
+      const userMessages = messages.filter(m => m.role === 'user').map(m => m.text).join(' ');
+      
+      // Create a basic lead payload from chat data
+      const payload = {
+        policy_type: 'unknown', // Could be extracted from chat using AI
+        contact: {
+          name: 'Chat User', // Could be extracted from chat
+          email: 'chat@example.com', // Should be collected in chat
+          phone: '0000000000', // Should be collected in chat
+        },
+        lead_score: 0.4, // Lower score for chat leads without complete info
+      };
 
-      const formData = new FormData();
-      formData.append('workflowId', WORKFLOW_ID);
-      formData.append('inputs[source]', 'chatbot');
-      formData.append('inputs[payload_text]', payloadText);
+      console.log('Submitting chatbot data to backend API');
+      console.log('Payload:', payload);
 
-      console.log('Submitting chatbot data to workflow API');
-      console.log('Payload text:', payloadText);
-
-      const response = await fetch(WORKFLOW_API_URL, {
+      const response = await fetch(`${BACKEND_API_URL}/api/intake/process-lead`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${BEARER_TOKEN}`,
-          'x-source': 'v1',
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         console.log('Chatbot data submitted successfully');
         setLeadSubmitted(true);
       } else {
-        console.error('Failed to submit chatbot data:', response.status);
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Failed to submit chatbot data:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error submitting chatbot data:', error);
