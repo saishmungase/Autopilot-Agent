@@ -254,6 +254,7 @@ function ProcessCallPanel({ lead, repName, repEmail, onClose }: {
     const ctx = JSON.stringify({ name:contact.name, email:contact.email, mobileNo:contact.phone, domain, transcript:'', assigned_to:assignedTo, assigned_to_mail:assignedMail })
     const fd = new FormData()
     fd.append('audio_file', audioFile)
+    fd.append('lead_id', lead.lead_id)   // ← pass the real lead_id so backend can close it
     fd.append('context', ctx)
     try {
       const r = await fetch(`${API_URL}/api/process-call`, { method:'POST', body:fd })
@@ -460,11 +461,13 @@ function LeadCard({ lead, onOpen }: { lead: Lead; onOpen?: () => void }) {
 function Dashboard({
   repName,
   repTeam,
+  repId,
   token,
   onSignOut,
 }: {
   repName: string
   repTeam: string
+  repId: number
   token: string
   onSignOut: () => void
 }) {
@@ -476,7 +479,7 @@ function Dashboard({
   const fetchLeads = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${API_URL}/api/reps/fetch?rep_id=1`, {
+      const res = await fetch(`${API_URL}/api/reps/fetch?rep_id=${repId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error()
@@ -489,7 +492,7 @@ function Dashboard({
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, repId])
 
   useEffect(() => {
     fetchLeads()
@@ -625,10 +628,18 @@ function Dashboard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function SalesPage() {
-  const [view, setView] = useState<View | null>(null) // null = checking localStorage
+  const [view, setView] = useState<View | null>(null)
   const [repName, setRepName] = useState('')
   const [repTeam, setRepTeam] = useState('')
+  const [repId, setRepId] = useState(0)
   const [token, setToken] = useState('')
+
+  // Decode rep_id from JWT payload (base64) — no library needed
+  const decodeRepId = (t: string): number => {
+    try {
+      return JSON.parse(atob(t.split('.')[1])).rep_id ?? 0
+    } catch { return 0 }
+  }
 
   // On mount: check if already logged in
   useEffect(() => {
@@ -639,6 +650,7 @@ export default function SalesPage() {
       setToken(savedToken)
       setRepName(savedName)
       setRepTeam(savedTeam)
+      setRepId(decodeRepId(savedToken))
       setView('dashboard')
     } else {
       setView('auth')
@@ -648,6 +660,7 @@ export default function SalesPage() {
   const handleAuthSuccess = (name: string, team: string, t: string) => {
     setRepName(name)
     setRepTeam(team)
+    setRepId(decodeRepId(t))
     setToken(t)
     setView('dashboard')
   }
@@ -659,6 +672,7 @@ export default function SalesPage() {
     setToken('')
     setRepName('')
     setRepTeam('')
+    setRepId(0)
     setView('auth')
   }
 
@@ -679,7 +693,7 @@ export default function SalesPage() {
         </motion.div>
       ) : (
         <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <Dashboard repName={repName} repTeam={repTeam} token={token} onSignOut={handleSignOut} />
+          <Dashboard repName={repName} repTeam={repTeam} repId={repId} token={token} onSignOut={handleSignOut} />
         </motion.div>
       )}
     </AnimatePresence>

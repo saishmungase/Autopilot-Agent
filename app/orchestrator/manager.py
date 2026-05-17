@@ -2,8 +2,11 @@ import os
 import asyncio
 import httpx
 import json
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger(__name__)
 
 pi = os.getenv("SUPER_API", "")
 
@@ -64,8 +67,9 @@ class Orchestrator:
         result_json = await self._stream_workflow(form_data, "Serialize", send=send)
 
         job = {
-            "lead_id": lead_id,
-            "context": result_json,  
+            "lead_id":    lead_id,
+            "context":    result_json,
+            "transcript": transcript,   # carry transcript so worker can save it
         }
         await self.queue.put(job)
         print(f"📥 [Serialize] Job enqueued for Worker!")
@@ -79,6 +83,7 @@ class Orchestrator:
             job = await self.queue.get()
             lead_id = job["lead_id"]
             context = job["context"]
+            transcript = job.get("transcript", "")
 
             async def send(agent: str, message: str):
                 ws = ws_clients.get(lead_id)
@@ -95,11 +100,40 @@ class Orchestrator:
                 await self.run_slack(context, send)
                 await self.run_email(context, send)
                 print(f"✅ All agents finished for lead {lead_id}")
+
+                # ── Mark lead as closed in the database ──────────────────
+                await self._close_lead(lead_id, transcript)
+                await send("System", "✅ Lead marked as closed")
+
             except Exception as e:
                 print(f"❌ Worker Error: {str(e)}")
                 await send("Error", f"Job failed: {str(e)}")
             finally:
                 self.queue.task_done()
+
+    async def _close_lead(self, lead_id: str, transcript: str) -> None:
+        """Update the lead status to 'closed' in the database after all agents finish."""
+        try:
+            from app.core.database import SessionLocal
+            from app.models.lead import Lead
+            import uuid as _uuid
+
+            db = SessionLocal()
+            try:
+                lead_uuid = _uuid.UUID(lead_id)
+                lead = db.query(Lead).filter(Lead.lead_id == lead_uuid).first()
+                if lead:
+                    lead.status = "closed"
+                    if transcript:
+                        lead.transcript = transcript
+                    db.commit()
+                    print(f"✅ Lead {lead_id} marked as closed in DB")
+                else:
+                    print(f"⚠️  Lead {lead_id} not found in intake_leads — skipping close")
+            finally:
+                db.close()
+        except Exception as e:
+            log.error(f"Failed to close lead {lead_id}: {e}")
 
 # ── Function 3: HubSpot ───────────────────────────────────────────────
     async def run_hubspot(self, context: dict, send):

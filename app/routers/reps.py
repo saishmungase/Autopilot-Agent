@@ -36,8 +36,40 @@ def login_rep(rep: SalesAgentLogin, db: Session = Depends(get_db)):
     if not db_rep or not verify_password(rep.password, db_rep.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     
-    access_token = create_access_token(data={"sub": db_rep.username})
+    # Embed both username AND rep id in the token so the frontend knows who is logged in
+    access_token = create_access_token(data={"sub": db_rep.username, "rep_id": db_rep.id})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me")
+def get_current_rep(token: str, db: Session = Depends(get_db)):
+    """
+    Decode the JWT and return the rep's profile.
+    The frontend calls this after login to get the real rep_id.
+    """
+    from app.core.security import decode_access_token
+    from jose import JWTError
+    try:
+        payload = decode_access_token(token)
+        username: str = payload.get("sub")
+        rep_id: int = payload.get("rep_id")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    if rep_id:
+        db_rep = db.query(Rep).filter(Rep.id == rep_id).first()
+    else:
+        db_rep = db.query(Rep).filter(Rep.username == username).first()
+
+    if not db_rep:
+        raise HTTPException(status_code=404, detail="Rep not found")
+
+    return {
+        "rep_id": db_rep.id,
+        "name": db_rep.name,
+        "team": db_rep.team,
+        "username": db_rep.username,
+    }
 
 @router.get("")
 def get_all_reps(db: Session = Depends(get_db)):

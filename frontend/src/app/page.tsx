@@ -430,13 +430,6 @@ function ChatWidget() {
     try {
       const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
       
-      // Extract lead information from chat messages
-      // This is a simplified version - you might want to use AI to extract structured data
-      const chatHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.text}`).join('\n');
-      
-      // Try to extract basic info from chat (this is a simple approach)
-      const userMessages = messages.filter(m => m.role === 'user').map(m => m.text).join(' ');
-      
       // Create a basic lead payload from chat data
       const payload = {
         policy_type: 'unknown', // Could be extracted from chat using AI
