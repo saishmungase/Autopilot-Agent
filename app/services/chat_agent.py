@@ -19,66 +19,35 @@ from openai import OpenAI
 
 log = logging.getLogger(__name__)
 
-# ── Gemini via OpenAI-compat endpoint ────────────────────────────────────────
-_client = OpenAI(
-    api_key=os.getenv("GEMINI_API_KEY", ""),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-)
-MODEL = "gemini-3.1-flash-lite-preview"
+# ── OpenAI Client ────────────────────────────────────────────────────
+_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
+MODEL = "gpt-4o-mini"
+TEMPERATURE = 0.4
+MAX_TOKENS = 512
 
-# ── System prompt ─────────────────────────────────────────────────────────────
+# ── System prompt ─────────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are Vity, a friendly AI insurance assistant for Vity Insurance.
-Your job is to have a natural conversation with the user, gather their insurance interest details,
-and then submit them as a lead so a sales rep can follow up.
+Your job is to gather: name, email, phone, policy_type (life/health/car/home), then submit the lead.
 
-You operate as a ReAct agent. Output ONLY strictly valid JSON, one step at a time.
-Never output prose, markdown, or backticks outside the JSON.
-
+You operate as a ReAct agent. ALWAYS output a single, strictly valid JSON object — nothing else.
 JSON format:
-{"step": "START"|"PLAN"|"TOOL"|"OUTPUT", "content": "string", "tool": "string", "input": "object"}
-
-"tool" and "input" are only required when step is "TOOL".
+  {"step": "TOOL", "tool": "<name>", "input": {<args>}, "content": "<brief reason>"}
+  {"step": "OUTPUT", "content": "<final message to user>"}
 
 AVAILABLE TOOLS:
-1. ask_user(message: string)
-   — Send a message to the user and wait for their reply.
-     Use this to greet, ask questions, or clarify.
-     input: {"message": "..."}
-
-2. collect_info(field: string, value: string)
-   — Store a piece of collected information.
-     field must be one of: name, email, phone, policy_type
-     policy_type must be one of: life, health, car, home, unknown
-     input: {"field": "name", "value": "Jane Doe"}
-
-3. submit_lead(name: string, email: string, phone: string, policy_type: string, lead_score: number)
-   — Submit the collected lead to the database and assign to a sales rep.
-     Only call this when you have name, email, phone, and policy_type.
-     lead_score: 0.0–1.0 based on how engaged/qualified the user seems.
-     input: {"name": "...", "email": "...", "phone": "...", "policy_type": "...", "lead_score": 0.7}
+1. ask_user  — input: {"message": "<what to say to the user>"}
+2. collect_info — input: {"field": "name|email|phone|policy_type", "value": "<value>"}
+3. submit_lead  — input: {"name": "...", "email": "...", "phone": "...", "policy_type": "...", "lead_score": 0.7}
+   Call ONLY when you have ALL 4 fields: name, email, phone, policy_type.
 
 RULES:
-- Always start with a warm greeting using ask_user.
-- Collect name, email, phone, and policy_type through natural conversation.
-- Never ask for all fields at once — ask one or two at a time naturally.
-- Once you have all 4 required fields, call submit_lead.
-- After submit_lead succeeds (OBSERVE shows success), output a friendly confirmation via OUTPUT.
-- If the user seems disengaged or says goodbye without providing info, output a polite farewell.
-- Keep responses warm, concise, and professional.
-
-Example flow:
-{"step": "START", "content": "User started a chat. I will greet them and begin gathering info."}
-{"step": "PLAN", "content": "I'll greet the user and ask their name first."}
-{"step": "TOOL", "tool": "ask_user", "input": {"message": "Hi! I'm Vity, your insurance assistant. What's your name?"}, "content": "Greeting user."}
-[OBSERVE: user replied "Jane"]
-{"step": "TOOL", "tool": "collect_info", "input": {"field": "name", "value": "Jane"}, "content": "Storing name."}
-[OBSERVE: stored]
-{"step": "TOOL", "tool": "ask_user", "input": {"message": "Nice to meet you, Jane! What type of insurance are you interested in — life, health, auto, or home?"}, "content": "Asking policy type."}
-...
-{"step": "TOOL", "tool": "submit_lead", "input": {"name": "Jane Doe", "email": "jane@example.com", "phone": "555-1234", "policy_type": "life", "lead_score": 0.75}, "content": "Submitting lead."}
-[OBSERVE: success]
-{"step": "OUTPUT", "content": "Thanks Jane! A specialist will reach out within 24 hours."}
-"""
+- Start with a warm greeting using ask_user
+- Collect all 4 fields via natural conversation (ask 2 at a time)
+- Use collect_info to store each field as you learn it
+- Once you have all 4, call submit_lead BEFORE outputting anything to the user
+- After submit_lead succeeds, call OUTPUT with a confirmation message
+- Keep messages brief (1-2 sentences)
+- Output ONLY the JSON, no markdown, no prose outside JSON"""
 
 # ── In-memory session store ───────────────────────────────────────────────────
 # session_id → {"history": [...], "collected": {...}, "done": bool, "pending_reply": bool}
@@ -100,51 +69,122 @@ def reset_session(session_id: str) -> None:
     _sessions.pop(session_id, None)
 
 
-def _call_llm(history: list[dict]) -> dict:
-    """Call Gemini and parse the JSON step response."""
+def _call_llm(history: list[dict]) -> tuple[dict, str]:
+    """Call OpenAI gpt-4o-mini with json_object mode — always returns valid JSON."""
     resp = _client.chat.completions.create(
         model=MODEL,
-        response_format={"type": "json_object"},
         messages=history,
+        response_format={"type": "json_object"},
+        temperature=TEMPERATURE,
+        max_tokens=MAX_TOKENS,
     )
-    raw = resp.choices[0].message.content
+    raw = resp.choices[0].message.content or "{}"
     return json.loads(raw), raw
 
 
+_TOOL_NAMES = {"ask_user", "collect_info", "submit_lead"}
+
+def _normalize(step_data: dict) -> dict:
+    """
+    Normalize GPT's response into the canonical ReAct format.
+    GPT-4o-mini sometimes outputs:
+      {"step": "ask_user", "message": "..."} instead of
+      {"step": "TOOL", "tool": "ask_user", "input": {"message": "..."}}
+    This function converts both forms to the canonical one.
+    """
+    step = step_data.get("step", "").lower()
+
+    # Already canonical TOOL/OUTPUT
+    if step == "tool":
+        return step_data
+    if step == "output":
+        return step_data
+
+    # step IS the tool name (flat format)
+    if step in _TOOL_NAMES:
+        tool = step
+        # Build input from remaining keys
+        input_data = {k: v for k, v in step_data.items() if k not in ("step", "content")}
+        return {
+            "step": "TOOL",
+            "tool": tool,
+            "input": input_data,
+            "content": step_data.get("content", ""),
+        }
+
+    return step_data  # unknown — pass through
+
+
 def _submit_lead_tool(data: dict) -> str:
-    """Call the internal intake API to create and route the lead."""
-    api_base = os.getenv("INTERNAL_API_URL", "http://localhost:8000")
-    payload = {
-        "policy_type": data.get("policy_type", "unknown"),
-        "contact": {
-            "name": data.get("name", ""),
-            "email": data.get("email", ""),
-            "phone": data.get("phone", ""),
-        },
-        "lead_score": float(data.get("lead_score", 0.5)),
-    }
+    """Submit the lead directly in-process — no HTTP self-call (avoids event loop deadlock)."""
+    import uuid
+    from app.core.database import SessionLocal
+    from app.models.lead import Lead as LeadModel
+    from app.policy_engine import PolicyViolationError, policy
+    from app.schemas.schemas import LeadDataContract, ContactInfo
+    from app.services.router_operator import route_lead_to_rep
+
     try:
-        r = httpx.post(f"{api_base}/api/intake/process-lead", json=payload, timeout=10)
-        r.raise_for_status()
-        result = r.json()
-        rep_id = result.get("assigned_rep_id")
-        return json.dumps({
-            "success": True,
-            "lead_id": str(result.get("lead_id", "")),
-            "assigned_rep_id": rep_id,
-            "status": result.get("status", "assigned"),
-        })
+        policy_type = data.get("policy_type", "unknown")
+        lead_score = float(data.get("lead_score", 0.5))
+        contact = ContactInfo(
+            name=data.get("name", ""),
+            email=data.get("email", ""),
+            phone=data.get("phone", ""),
+        )
+        lead_dict = {
+            "lead_id": "",
+            "policy_type": policy_type,
+            "contact": contact.dict(),
+            "lead_score": lead_score,
+        }
+
+        # Run policy checks
+        for pid, check in [
+            ("POLICY-1", lambda: policy.check_contact_completeness(lead_dict)),
+            ("POLICY-2", lambda: policy.check_duplicate_lead(lead_dict)),
+            ("POLICY-3", lambda: policy.check_minimum_lead_score(lead_dict)),
+        ]:
+            try:
+                check()
+            except PolicyViolationError as e:
+                if not e.route_to_workbench:
+                    return json.dumps({"success": False, "error": f"Policy blocked: {e.reason}"})
+
+        # Write to DB
+        db = SessionLocal()
+        try:
+            lead_uuid = uuid.uuid4()
+            new_lead = LeadModel(
+                lead_id=lead_uuid,
+                policy_type=policy_type,
+                contact=contact.dict(),
+                lead_score=lead_score,
+                status="new",
+            )
+            db.add(new_lead)
+            db.commit()
+            db.refresh(new_lead)
+            routed = route_lead_to_rep(db, new_lead)
+            return json.dumps({
+                "success": True,
+                "lead_id": str(routed.lead_id),
+                "assigned_rep_id": routed.assigned_rep_id,
+                "status": routed.status,
+            })
+        finally:
+            db.close()
     except Exception as e:
         log.error(f"submit_lead failed: {e}")
         return json.dumps({"success": False, "error": str(e)})
 
 
-def _run_tool(tool: str, input_data: dict, session: dict) -> str:
+def _run_tool(tool: str, input_data: dict, session: dict, step_data: dict | None = None) -> str:
     """Execute a tool and return the observation string."""
     if tool == "ask_user":
-        # Mark that we're waiting for the user's reply
         session["pending_user_reply"] = True
-        return f"__ASK_USER__:{input_data.get('message', '')}"
+        message = input_data.get("message") or (step_data.get("content") if step_data else None) or ""
+        return f"__ASK_USER__:{message}"
 
     elif tool == "collect_info":
         field = input_data.get("field", "")
@@ -197,7 +237,7 @@ def process_message(session_id: str, user_message: str | None) -> dict[str, Any]
     lead_submitted = False
 
     # Run the ReAct loop until we need user input or reach OUTPUT
-    max_steps = 20
+    max_steps = 10  # Reduced from 20 for faster responses
     for _ in range(max_steps):
         try:
             step_data, raw = _call_llm(session["history"])
@@ -206,6 +246,7 @@ def process_message(session_id: str, user_message: str | None) -> dict[str, Any]
             return {"reply": "Sorry, I'm having trouble right now. Please try again.", "done": False, "lead_submitted": False, "lead_id": None, "assigned_rep_id": None}
 
         session["history"].append({"role": "assistant", "content": raw})
+        step_data = _normalize(step_data)
         step = step_data.get("step", "").upper()
 
         if step in ("START", "PLAN"):
@@ -219,7 +260,7 @@ def process_message(session_id: str, user_message: str | None) -> dict[str, Any]
         elif step == "TOOL":
             tool = step_data.get("tool", "")
             input_data = step_data.get("input", {})
-            observation = _run_tool(tool, input_data, session)
+            observation = _run_tool(tool, input_data, session, step_data=step_data)
 
             if observation.startswith("__ASK_USER__:"):
                 # Agent wants to say something to the user — return and wait
