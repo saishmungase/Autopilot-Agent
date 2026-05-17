@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from groq import Groq
+from openai import OpenAI
 
 from app.core.database import get_db
 from app.models.lead import Lead
@@ -23,8 +23,8 @@ from app.models.audit import AuditLog
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai-manager", tags=["AI Manager"])
 
-# ─── Groq Client ─────────────────────────────────────────────────────────────
-_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# ─── OpenAI Client ───────────────────────────────────────────────────────────
+_openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ─── Qdrant / Gemini RAG config ───────────────────────────────────────────────
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "sales_playbook")
@@ -462,8 +462,8 @@ async def ai_manager_chat(req: ChatRequest, db: Session = Depends(get_db)) -> Ch
 
     # 3. Agentic tool-calling loop
     for _ in range(MAX_ROUNDS):
-        response = _groq.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        response = _openai.chat.completions.create(
+            model="gpt-4o-mini",
             messages=history,
             tools=TOOLS,
             tool_choice="auto",
@@ -494,5 +494,5 @@ async def ai_manager_chat(req: ChatRequest, db: Session = Depends(get_db)) -> Ch
             history.append({"role": "tool", "tool_call_id": tc.id, "content": result})
 
     # 4. Final answer
-    final = _groq.chat.completions.create(model="llama-3.3-70b-versatile", messages=history, temperature=0.3, max_tokens=1024)
+    final = _openai.chat.completions.create(model="gpt-4o-mini", messages=history, temperature=0.3, max_tokens=1024)
     return ChatResponse(reply=final.choices[0].message.content or "", tool_calls_made=tool_calls_made, rag_chunks_used=len(rag_chunks))

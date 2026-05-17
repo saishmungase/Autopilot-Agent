@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from 'recharts'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
 const SUPERVITY_API = process.env.NEXT_PUBLIC_SUPERVITY_API_URL || 'https://auto-workflow-api.supervity.ai'
@@ -1150,15 +1154,100 @@ export default function CommandCenter() {
             <div className="rounded-2xl p-6 bg-white border border-[#E2E6F8] shadow-sm">
               <h2 className="text-lg font-semibold text-[#3D4B8F] mb-6">Pipeline Overview</h2>
               <div className="space-y-6">
-                <div className="h-48 flex items-center justify-center border border-dashed border-[#E2E6F8] rounded-xl bg-[#F8F9FF]">
-                  <p className="text-sm text-[#8B9FE8]">Funnel Chart (Recharts)</p>
+
+                {/* Leads by Hour — Bar Chart */}
+                <div>
+                  <p className="text-xs font-medium text-[#8B9FE8] uppercase tracking-wider mb-3">Leads by Hour (Today)</p>
+                  <div className="h-44">
+                    {analytics ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analytics.leads_by_hour} margin={{ top: 0, right: 0, left: -28, bottom: 0 }}>
+                          <XAxis
+                            dataKey="hour"
+                            tick={{ fontSize: 10, fill: '#8B9FE8' }}
+                            tickFormatter={(h) => `${h}h`}
+                            interval={3}
+                          />
+                          <YAxis tick={{ fontSize: 10, fill: '#8B9FE8' }} allowDecimals={false} />
+                          <Tooltip
+                            contentStyle={{ background: '#fff', border: '1px solid #E2E6F8', borderRadius: 8, fontSize: 12 }}
+                            formatter={(v) => [v, 'Leads']}
+                            labelFormatter={(h) => `Hour ${h}:00`}
+                          />
+                          <Bar dataKey="count" fill="#3D4B8F" radius={[3, 3, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3D4B8F] border-t-transparent" />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="h-48 flex items-center justify-center border border-dashed border-[#E2E6F8] rounded-xl bg-[#F8F9FF]">
-                  <p className="text-sm text-[#8B9FE8]">Donut Chart (Recharts)</p>
+
+                {/* Policy Split — Donut */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-[#8B9FE8] uppercase tracking-wider mb-3">By Policy Type</p>
+                    <div className="h-40">
+                      {analytics && Object.keys(analytics.leads_by_policy).length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={Object.entries(analytics.leads_by_policy).map(([name, value]) => ({ name, value }))}
+                              cx="50%" cy="50%"
+                              innerRadius={38} outerRadius={60}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              {Object.keys(analytics.leads_by_policy).map((_, i) => (
+                                <Cell key={i} fill={['#3D4B8F', '#6B7FD4', '#8B9FE8', '#B8C4F5', '#E2E6F8'][i % 5]} />
+                              ))}
+                            </Pie>
+                            <Tooltip contentStyle={{ background: '#fff', border: '1px solid #E2E6F8', borderRadius: 8, fontSize: 12 }} />
+                            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: '#8B9FE8' }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-xs text-[#8B9FE8]">No data yet</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status Funnel — horizontal bars */}
+                  <div>
+                    <p className="text-xs font-medium text-[#8B9FE8] uppercase tracking-wider mb-3">By Status</p>
+                    <div className="h-40 flex flex-col justify-center gap-2">
+                      {analytics && Object.keys(analytics.leads_by_status).length > 0 ? (
+                        Object.entries(analytics.leads_by_status).map(([status, count]) => {
+                          const total = Object.values(analytics.leads_by_status).reduce((a, b) => a + b, 0)
+                          const pct = total > 0 ? Math.round((count / total) * 100) : 0
+                          const colourMap: Record<string, string> = {
+                            new: '#8B9FE8', assigned: '#3D4B8F', in_progress: '#6B7FD4',
+                            closed: '#2D3A6F', unqualified: '#B8C4F5', blocked: '#E2E6F8',
+                          }
+                          return (
+                            <div key={status}>
+                              <div className="flex justify-between text-xs text-[#8B9FE8] mb-1">
+                                <span className="capitalize">{status.replace('_', ' ')}</span>
+                                <span>{count} ({pct}%)</span>
+                              </div>
+                              <div className="h-2 bg-[#E2E6F8] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{ width: `${pct}%`, background: colourMap[status] ?? '#3D4B8F' }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })
+                      ) : (
+                        <div className="text-xs text-[#8B9FE8] text-center">No data yet</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="h-48 flex items-center justify-center border border-dashed border-[#E2E6F8] rounded-xl bg-[#F8F9FF]">
-                  <p className="text-sm text-[#8B9FE8]">Bar Chart (Recharts)</p>
-                </div>
+
               </div>
             </div>
           </div>
